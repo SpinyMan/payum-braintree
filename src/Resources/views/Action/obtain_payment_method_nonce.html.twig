@@ -1,0 +1,136 @@
+{% extends layout ?: "@PayumCore/layout.html.twig" %}
+
+{% block payum_body %}
+
+    {% block braintree_payment_form %}
+        <div id="dropin-container"></div>
+        <form method="POST" action="{{ formAction }}" id="payment-form">
+            <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
+        </form>
+        <input type="submit" class="btn btn-default" disabled="disabled" value="Loading..." id="submit-button" />
+    {% endblock %}
+
+    {% block braintree_init_js %}
+
+        <script type="text/javascript">
+            var s = document.createElement('script');
+            s.src = 'https://js.braintreegateway.com/web/dropin/1.13.0/js/dropin.min.js';
+            s.onload = setupForm;
+            document.getElementsByTagName('head')[0].appendChild(s);
+
+            var payBtn = document.querySelector('#submit-button');
+            var form = document.querySelector('#payment-form');
+
+            function enablePayNow() {
+                payBtn.value = 'Pay Now';
+                payBtn.removeAttribute('disabled');
+            }
+
+            function setupForm() {
+                braintree.dropin.create({
+                    authorization: {{ clientToken|json_encode|raw }},
+                    container: '#dropin-container',
+                    paypal: {
+                        //flow: 'vault'
+                        flow: 'checkout',
+                        amount: {{ amount|json_encode|raw }},
+                        currency: {{ currency|json_encode|raw }}
+                    },
+                    venmo: {
+                        allowNewBrowserTab: false
+                    },
+                    applePay: {
+                        displayName: 'My Store',
+                        paymentRequest: {
+                            total: {
+                                label: 'Total',
+                                amount: {{ amount|json_encode|raw }}
+                            },
+                            // We recommend collecting billing address information, at minimum
+                            // billing postal code, and passing that billing postal code with all
+                            // Google Pay transactions as a best practice.
+                            requiredBillingContactFields: ['postalAddress']
+                        }
+                    },
+                    googlePay: {
+                        merchantId: {{ google_pay_merchant_id|json_encode|raw }},
+                        transactionInfo: {
+                            totalPriceStatus: 'FINAL',
+                            totalPrice: {{ amount|json_encode|raw }},
+                            currencyCode: {{ currency|json_encode|raw }}
+                        },
+                        cardRequirements: {
+                            // We recommend collecting and passing billing address information with all Google Pay transactions as a best practice.
+                            billingAddressRequired: true
+                        }
+                    },
+                    threeDSecure: {
+                        amount: {{ amount|json_encode|raw }},
+                    }
+                }, function (createErr, dropinInstance) {
+                    if (createErr) {
+                        // An error in the create call is likely due to
+                        // incorrect configuration values or network issues.
+                        // An appropriate error will be shown in the UI.
+                        console.error(createErr);
+                        //return;
+                    }
+
+                    payBtn.addEventListener('click', function () {
+                        payBtn.setAttribute('disabled', true);
+                        payBtn.value = 'Processing...';
+
+                        dropinInstance.requestPaymentMethod(function (requestPaymentMethodErr, payload) {
+                            // Submit payload.nonce to your server
+                            if (requestPaymentMethodErr) {
+                                console.error(requestPaymentMethodErr);
+                                enablePayNow();
+                                return;
+                            }
+
+                            document.querySelector('#payment_method_nonce').value = payload.nonce;
+
+                            if (payload.type !== 'CreditCard') {
+                                form.submit();
+                                return;
+                            }
+
+                            if (!payload.liabilityShifted) {
+                                dropinInstance.clearSelectedPaymentMethod();
+                                console.log('Liability did not shift', payload);
+                                enablePayNow();
+                                return;
+                            }
+
+                            console.log('verification success:', payload);
+                            //showNonce(payload);
+                            form.submit();
+                        });
+                    });
+
+                    if (dropinInstance.isPaymentMethodRequestable()) {
+                        // This will be true if you generated the client token
+                        // with a customer ID and there is a saved payment method
+                        // available to tokenize with that customer.
+                        enablePayNow();
+                    }
+
+                    dropinInstance.on('paymentMethodRequestable', function (event) {
+                        // The type of Payment Method, e.g 'CreditCard', 'PayPalAccount'.
+                        //console.log(event.type);
+                        // True if a customer has selected a payment method when paymentMethodRequestable fires.
+                        //console.log(event.paymentMethodIsSelected);
+
+                        enablePayNow();
+                    });
+
+                    dropinInstance.on('noPaymentMethodRequestable', function () {
+                        //console.log('noPaymentMethodRequestable');
+                        payBtn.setAttribute('disabled', true);
+                    });
+                });
+            }
+        </script>
+    {% endblock %}
+
+{% endblock %}
