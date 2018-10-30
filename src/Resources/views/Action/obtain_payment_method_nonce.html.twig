@@ -21,9 +21,19 @@
             var payBtn = document.querySelector('#submit-button');
             var form = document.querySelector('#payment-form');
 
-            function enablePayNow() {
-                payBtn.value = 'Pay Now';
-                payBtn.removeAttribute('disabled');
+            const PAY_NOW = 'Pay Now';
+
+            function updatePayButton(text, disabled) {
+                if (typeof text !== 'undefined' && text !== '') {
+                    payBtn.value = text;
+                }
+                if (typeof disabled !== 'undefined') {
+                    if (disabled) {
+                        payBtn.setAttribute('disabled', true);
+                    } else {
+                        payBtn.removeAttribute('disabled');
+                    }
+                }
             }
 
             function setupForm() {
@@ -76,15 +86,16 @@
                         //return;
                     }
 
+                    updatePayButton(PAY_NOW);
+
                     payBtn.addEventListener('click', function () {
-                        payBtn.setAttribute('disabled', true);
-                        payBtn.value = 'Processing...';
+                        updatePayButton('Processing...', true);
 
                         dropinInstance.requestPaymentMethod(function (requestPaymentMethodErr, payload) {
                             // Submit payload.nonce to your server
                             if (requestPaymentMethodErr) {
                                 console.error(requestPaymentMethodErr);
-                                enablePayNow();
+                                updatePayButton(PAY_NOW, false);
                                 return;
                             }
 
@@ -98,7 +109,7 @@
                             if (!payload.liabilityShifted) {
                                 dropinInstance.clearSelectedPaymentMethod();
                                 console.log('Liability did not shift', payload);
-                                enablePayNow();
+                                updatePayButton(PAY_NOW, false);
                                 return;
                             }
 
@@ -112,7 +123,7 @@
                         // This will be true if you generated the client token
                         // with a customer ID and there is a saved payment method
                         // available to tokenize with that customer.
-                        enablePayNow();
+                        updatePayButton(PAY_NOW, false);
                     }
 
                     dropinInstance.on('paymentMethodRequestable', function (event) {
@@ -121,12 +132,12 @@
                         // True if a customer has selected a payment method when paymentMethodRequestable fires.
                         //console.log(event.paymentMethodIsSelected);
 
-                        enablePayNow();
+                        updatePayButton(PAY_NOW, false);
                     });
 
                     dropinInstance.on('noPaymentMethodRequestable', function () {
                         //console.log('noPaymentMethodRequestable');
-                        payBtn.setAttribute('disabled', true);
+                        updatePayButton('', true);
                     });
                 });
             }
