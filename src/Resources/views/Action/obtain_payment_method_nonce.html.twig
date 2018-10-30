@@ -7,7 +7,7 @@
         <form method="POST" action="{{ formAction }}" id="payment-form">
             <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
         </form>
-        <input type="submit" class="btn btn-default" disabled="disabled" value="Loading..." id="submit-button" />
+        <button type="submit" class="btn btn-default" disabled="disabled" id="payment-button">Loading...</button>
     {% endblock %}
 
     {% block braintree_init_js %}
@@ -18,14 +18,14 @@
             s.onload = setupForm;
             document.getElementsByTagName('head')[0].appendChild(s);
 
-            var payBtn = document.querySelector('#submit-button');
+            var payBtn = document.querySelector('#payment-button');
             var form = document.querySelector('#payment-form');
 
-            const PAY_NOW = 'Pay Now';
+            const PAY_NOW = 'Pay';
 
             function updatePayButton(text, disabled) {
                 if (typeof text !== 'undefined' && text !== '') {
-                    payBtn.value = text;
+                    payBtn.innerHTML = text;
                 }
                 if (typeof disabled !== 'undefined') {
                     if (disabled) {
