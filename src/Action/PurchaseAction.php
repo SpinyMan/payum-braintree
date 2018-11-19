@@ -11,7 +11,7 @@ use Payum\Core\Request\Authorize;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Exception\RuntimeException;
 use Payum\Braintree\Request\ObtainPaymentMethodNonce;
-use Payum\Braintree\Request\ObtainCardholderAuthentication;
+//use Payum\Braintree\Request\ObtainCardholderAuthentication;
 use Payum\Braintree\Request\Api\FindPaymentMethodNonce;
 use Payum\Braintree\Request\Api\DoSale;
 use Payum\Braintree\Reply\Api\PaymentMethodNonceArray;
@@ -53,7 +53,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         try {
             $this->obtainPaymentMethodNonce($details);
 
-            $this->obtainCardholderAuthentication($details);
+            //$this->obtainCardholderAuthentication($details);
 
             $this->doSaleTransaction($details);
 
@@ -94,8 +94,8 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $this->findPaymentMethodNonceInfo($details);
     }
 
-    protected function obtainCardholderAuthentication($details)
-    {        
+    /*protected function obtainCardholderAuthentication($details)
+    {
         $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
 
         $isNotRequired = true !== $this->cardholderAuthenticationRequired;
@@ -113,7 +113,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $details['paymentMethodNonce'] = $paymentMethodNonce;
 
         $this->findPaymentMethodNonceInfo($details);
-    }
+    }*/
 
     protected function findPaymentMethodNonceInfo($details)
     {

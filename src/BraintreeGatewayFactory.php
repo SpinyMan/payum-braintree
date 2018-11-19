@@ -6,6 +6,7 @@ use Payum\Braintree\Action\ConvertPaymentAction;
 use Payum\Braintree\Action\ObtainPaymentMethodNonceAction;
 use Payum\Braintree\Action\ObtainCardholderAuthenticationAction;
 use Payum\Braintree\Action\PurchaseAction;
+use Payum\Braintree\Action\RefundAction;
 use Payum\Braintree\Action\StatusAction;
 use Payum\Braintree\Action\Api\GenerateClientTokenAction;
 use Payum\Braintree\Action\Api\FindPaymentMethodNonceAction;
@@ -46,9 +47,11 @@ class BraintreeGatewayFactory extends GatewayFactory
                 return $action;
             },
 
-            'payum.action.obtain_cardholder_authentication' => function(ArrayObject $config) {
+            /*'payum.action.obtain_cardholder_authentication' => function(ArrayObject $config) {
                 return new ObtainCardholderAuthenticationAction($config['payum.template.obtain_cardholder_authentication']);
-            },
+            },*/
+
+            'payum.action.refund' => new RefundAction(),
 
             'payum.action.status' => new StatusAction(),
 
@@ -59,15 +62,18 @@ class BraintreeGatewayFactory extends GatewayFactory
             'cardholderAuthenticationRequired' => true
         ]);
 
-        if (false == $config['payum.api']) {
-            $config['payum.default_options'] = array(
+        if (! $config['payum.default_options']) {
+            $config['payum.default_options'] = [
                 'sandbox' => true,
                 'storeInVault' => null,
                 'storeInVaultOnSuccess' => null,
                 'storeShippingAddressInVault' => null,
                 'addBillingAddressToPaymentMethod' => null
-            );
-            $config->defaults($config['payum.default_options']);
+            ];
+        }
+        $config->defaults($config['payum.default_options']);
+
+        if (false == $config['payum.api']) {
             $config['payum.required_options'] = [];
 
             $config['payum.api'] = function (ArrayObject $config) {
