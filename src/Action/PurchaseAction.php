@@ -2,6 +2,7 @@
 
 namespace Payum\Braintree\Action;
 
+use Payum\Braintree\Request\Api\CreateCustomer;
 use Payum\Braintree\Request\Purchase;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
@@ -53,17 +54,18 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         try {
             $this->obtainPaymentMethodNonce($details);
 
-            //$this->obtainCardholderAuthentication($details);
+            if ($details->offsetExists('pre-authorized') && $details->offsetGet('pre-authorized')) {
+                $this->createCustomer($details);
+            } else {
+                //$this->obtainCardholderAuthentication($details);
 
-            $this->doSaleTransaction($details);
+                $this->doSaleTransaction($details);
 
-            $this->resolveStatus($details);
+                $this->resolveStatus($details);
 
-            if ( ! $details->offsetExists('paymentMethodNonce')
-                || ! $details->offsetExists('paymentMethodNonceInfo')
-                || ! $details->offsetExists('sale')
-                || ! $details->offsetExists('status')) {
-                throw new \Exception('Validation error');
+                if (! $details->offsetExists('paymentMethodNonce') || ! $details->offsetExists('paymentMethodNonceInfo') || ! $details->offsetExists('sale') || ! $details->offsetExists('status')) {
+                    throw new \Exception('Validation error');
+                }
             }
         }
         catch(RuntimeException $exception) { 
@@ -95,7 +97,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
     }
 
     /*protected function obtainCardholderAuthentication($details)
-    {
+    {        
         $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
 
         $isNotRequired = true !== $this->cardholderAuthenticationRequired;
@@ -152,6 +154,14 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $transaction = $request->getResponse();
 
         $details['sale'] = TransactionResultArray::toArray($transaction);
+    }
+
+    protected function createCustomer($details)
+    {
+        $request = new CreateCustomer($details);
+        $this->gateway->execute($request);
+        $customer = $request->getResponse();
+        $details['customer'] = TransactionResultArray::toArray($customer);
     }
 
     /**

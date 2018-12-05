@@ -1,6 +1,7 @@
 <?php
 namespace Payum\Braintree;
 
+use Braintree\Customer;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Braintree\Configuration;
 use Braintree\ClientToken;
@@ -59,7 +60,7 @@ class Api
     {
         return PaymentMethodNonce::find($nonceString);
     }
-    
+
     public function sale(ArrayObject $params)
     {
         $options = $params->offsetExists('options') ? $params['options'] : array();
@@ -93,5 +94,15 @@ class Api
         }
 
         return Transaction::sale((array)$params);
+    }
+
+    public function refund(ArrayObject $params)
+    {
+        return Transaction::refund($params->offsetGet('transactionId'), $params->offsetGet('amount'));
+    }
+
+    public function createCustomer(ArrayObject $params)
+    {
+        return Customer::createNoValidate($params);
     }
 }

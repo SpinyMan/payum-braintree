@@ -42,6 +42,7 @@ class DoSaleAction extends BaseApiAwareAction
             'billing',
             'shipping',
             'customer',
+            'customerId',
             'orderId',
         ];
 

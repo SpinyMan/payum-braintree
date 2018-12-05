@@ -1,12 +1,12 @@
 <?php
 namespace Payum\Braintree;
 
+use Payum\Braintree\Action\Api\DoRefundAction;
 use Payum\Braintree\Action\CaptureAction;
 use Payum\Braintree\Action\ConvertPaymentAction;
 use Payum\Braintree\Action\ObtainPaymentMethodNonceAction;
 use Payum\Braintree\Action\ObtainCardholderAuthenticationAction;
 use Payum\Braintree\Action\PurchaseAction;
-use Payum\Braintree\Action\RefundAction;
 use Payum\Braintree\Action\StatusAction;
 use Payum\Braintree\Action\Api\GenerateClientTokenAction;
 use Payum\Braintree\Action\Api\FindPaymentMethodNonceAction;
@@ -51,13 +51,12 @@ class BraintreeGatewayFactory extends GatewayFactory
                 return new ObtainCardholderAuthenticationAction($config['payum.template.obtain_cardholder_authentication']);
             },*/
 
-            'payum.action.refund' => new RefundAction(),
-
             'payum.action.status' => new StatusAction(),
 
             'payum.action.api.generate_client_token' => new GenerateClientTokenAction(),
             'payum.action.api.find_payment_method_nonce' => new FindPaymentMethodNonceAction(),
             'payum.action.api.do_sale' => new DoSaleAction(),
+            'payum.action.api.do_refund' => new DoRefundAction(),
 
             'cardholderAuthenticationRequired' => true
         ]);

@@ -14,7 +14,7 @@
 
         <script type="text/javascript">
             var s = document.createElement('script');
-            s.src = 'https://js.braintreegateway.com/web/dropin/1.13.0/js/dropin.min.js';
+            s.src = 'https://js.braintreegateway.com/web/dropin/1.14.1/js/dropin.min.js';
             s.onload = setupForm;
             document.getElementsByTagName('head')[0].appendChild(s);
 
@@ -135,10 +135,10 @@
                         updatePayButton(PAY_NOW, false);
                     });
 
-                    /*dropinInstance.on('noPaymentMethodRequestable', function () {
+                    dropinInstance.on('noPaymentMethodRequestable', function () {
                         //console.log('noPaymentMethodRequestable');
                         //updatePayButton('', true);
-                    });*/
+                    });
                 });
             }
         </script>
