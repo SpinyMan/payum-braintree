@@ -35,14 +35,14 @@ class DoSaleAction extends BaseApiAwareAction
         $requestParams = new ArrayObject();
 
         $forwardParams = [
-            'amount', 
+            'amount',
             'paymentMethodNonce',
             'paymentMethodToken',
             'creditCard',
             'billing',
             'shipping',
-            'customer',
-            'customerId',
+            //'customer',
+            //'customerId',
             'orderId',
         ];
 
@@ -56,6 +56,11 @@ class DoSaleAction extends BaseApiAwareAction
             $requestParams['options'] = $details['saleOptions'];
         }
 
+        //fix error: Cannot provide both paymentMethodToken and creditCard attributes
+        if ($requestParams->offsetExists('paymentMethodToken') && $requestParams->offsetExists('paymentMethodNonce')) {
+            $requestParams->offsetUnset('paymentMethodNonce');
+        }
+
         return $requestParams;
     }
 
@@ -64,9 +69,6 @@ class DoSaleAction extends BaseApiAwareAction
      */
     public function supports($request)
     {
-        return
-            $request instanceof DoSale &&
-            $request->getModel() instanceof \ArrayAccess
-        ;
+        return $request instanceof DoSale && $request->getModel() instanceof \ArrayAccess;
     }
 }

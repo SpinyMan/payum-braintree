@@ -55,7 +55,7 @@ class Api
 
         return ClientToken::generate($params);
     }
-    
+
     public function findPaymentMethodNonce($nonceString)
     {
         return PaymentMethodNonce::find($nonceString);
@@ -73,15 +73,15 @@ class Api
             $options['storeInVaultOnSuccess'] = $this->options['storeInVaultOnSuccess'];
         }
 
-        if (null !== $this->options['addBillingAddressToPaymentMethod'] && 
-            !isset($options['addBillingAddressToPaymentMethod']) && 
+        if (null !== $this->options['addBillingAddressToPaymentMethod'] &&
+            !isset($options['addBillingAddressToPaymentMethod']) &&
             $params->offsetExists('billing')) {
 
             $options['addBillingAddressToPaymentMethod'] = $this->options['addBillingAddressToPaymentMethod'];
         }
 
-        if (null !== $this->options['storeShippingAddressInVault'] && 
-            !isset($options['storeShippingAddressInVault']) && 
+        if (null !== $this->options['storeShippingAddressInVault'] &&
+            !isset($options['storeShippingAddressInVault']) &&
             $params->offsetExists('shipping')) {
 
             $options['storeShippingAddressInVault'] = $this->options['storeShippingAddressInVault'];
@@ -101,7 +101,7 @@ class Api
         return Transaction::refund($params->offsetGet('transactionId'), $params->offsetGet('amount'));
     }
 
-    public function createCustomer(ArrayObject $params)
+    public function createCustomer(array $params)
     {
         return Customer::createNoValidate($params);
     }

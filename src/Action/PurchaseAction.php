@@ -54,7 +54,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         try {
             $this->obtainPaymentMethodNonce($details);
 
-            if ($details->offsetExists('pre-authorized') && $details->offsetGet('pre-authorized')) {
+            if ($details->offsetExists('pre-authorized') && $details->offsetGet('pre-authorized') && ! $details->offsetExists('customer')) {
                 $this->createCustomer($details);
             } else {
                 //$this->obtainCardholderAuthentication($details);
@@ -68,7 +68,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 }
             }
         }
-        catch(RuntimeException $exception) { 
+        catch(RuntimeException $exception) {
 
             $details['status'] = 'failed';
             $details['status_reason'] = $exception->getMessage();
@@ -97,7 +97,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
     }
 
     /*protected function obtainCardholderAuthentication($details)
-    {        
+    {
         $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
 
         $isNotRequired = true !== $this->cardholderAuthenticationRequired;
@@ -130,18 +130,17 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $details['paymentMethodNonceInfo'] = PaymentMethodNonceArray::toArray($paymentMethodInfo);
     }
 
-    protected function doSaleTransaction($details) 
+    protected function doSaleTransaction($details)
     {
         if ($details->offsetExists('sale')) {
-            return;    
+            return;
         }
 
         $saleOptions = [
             'submitForSettlement' => true
         ];
 
-        if ($details->offsetExists('paymentMethodNonce')) {
-
+        if ($details->offsetExists('paymentMethodNonce') && ! $details->offsetExists('pre-authorized')) {
             $saleOptions['threeDSecure'] = [
                 'required' => $this->cardholderAuthenticationRequired
             ];
@@ -160,8 +159,9 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
     {
         $request = new CreateCustomer($details);
         $this->gateway->execute($request);
+        /** @var \Braintree\Customer $customer */
         $customer = $request->getResponse();
-        $details['customer'] = TransactionResultArray::toArray($customer);
+        $details['customer'] = $customer->jsonSerialize();
     }
 
     /**
@@ -174,7 +174,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         if (array_get($sale, 'success')) {
 
             switch($sale['transaction']['status']) {
-                
+
                 case Transaction::AUTHORIZED:
                 case Transaction::AUTHORIZING:
 

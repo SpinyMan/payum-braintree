@@ -26,14 +26,14 @@ class CreateCustomerAction extends BaseApiAwareAction
         /** @var $request DoSale */
         RequestNotSupportedException::assertSupports($this, $request);
 
-        $requestParams = $this->getRefundRequestParams($request);
+        $requestParams = $this->getRequestParams($request);
 
         $transactionResult = $this->api->createCustomer($requestParams);
 
         $request->setResponse($transactionResult);
     }
 
-    private function getRefundRequestParams($request)
+    private function getRequestParams($request)
     {
         $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
 
@@ -41,11 +41,11 @@ class CreateCustomerAction extends BaseApiAwareAction
             throw new \Exception('Validation error');
         }
 
-        $params = new ArrayObject();
+        $params = [];
         foreach (['paymentMethodNonce', 'firstName', 'lastName', 'email', 'phone'] as $key)  {
             if (! $details->offsetExists($key)) continue;
 
-            $params->offsetSet($key, $details->offsetGet($key));
+            $params[$key] = $details->offsetGet($key);
         }
 
         return $params;
