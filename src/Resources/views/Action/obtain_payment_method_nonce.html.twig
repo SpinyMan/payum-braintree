@@ -14,7 +14,7 @@
 
         <script type="text/javascript">
             var s = document.createElement('script');
-            s.src = 'https://js.braintreegateway.com/web/dropin/1.14.1/js/dropin.min.js';
+            s.src = 'https://js.braintreegateway.com/web/dropin/1.15.0/js/dropin.min.js';
             s.onload = setupForm;
             document.getElementsByTagName('head')[0].appendChild(s);
 
@@ -83,7 +83,7 @@
                         // incorrect configuration values or network issues.
                         // An appropriate error will be shown in the UI.
                         console.error(createErr);
-                        //return;
+                        return;
                     }
 
                     updatePayButton(PAY_NOW);
