@@ -40,6 +40,24 @@
                 braintree.dropin.create({
                     authorization: {{ clientToken|json_encode|raw }},
                     container: '#dropin-container',
+                    card: {
+                        cardholderName: {
+                            required: true
+                        },
+                        overrides: {
+                            fields: {
+                                /*number: {
+                                    maskInput: {
+                                        showLastFour: true
+                                    }
+                                },*/
+                                cvv: {
+                                    maskInput: true
+                                }
+                            }
+                        }
+                    },
+                    vaultManager: true,
                     paypal: {
                         //flow: 'vault'
                         flow: 'checkout',
