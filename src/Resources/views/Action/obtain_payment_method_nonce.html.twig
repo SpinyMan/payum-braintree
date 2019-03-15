@@ -124,6 +124,10 @@
                                 return;
                             }
 
+                            var event = new Event('dropin.payload');
+                            event.payload = payload;
+                            document.dispatchEvent(event);
+
                             if (!payload.liabilityShifted) {
                                 dropinInstance.clearSelectedPaymentMethod();
                                 console.log('Liability did not shift', payload);
