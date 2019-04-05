@@ -14,7 +14,7 @@
 
         <script type="text/javascript">
             var s = document.createElement('script');
-            s.src = 'https://js.braintreegateway.com/web/dropin/1.16.0/js/dropin.min.js';
+            s.src = 'https://js.braintreegateway.com/web/dropin/1.17.0/js/dropin.min.js';
             s.onload = setupForm;
             document.getElementsByTagName('head')[0].appendChild(s);
 
@@ -81,6 +81,7 @@
                         }
                     },
                     googlePay: {
+                        googlePayVersion: 2,
                         merchantId: {{ google_pay_merchant_id|json_encode|raw }},
                         transactionInfo: {
                             totalPriceStatus: 'FINAL',
@@ -103,6 +104,8 @@
                         console.error(createErr);
                         return;
                     }
+
+                    document.dispatchEvent(new Event('dropin.created'));
 
                     updatePayButton(PAY_NOW);
 
