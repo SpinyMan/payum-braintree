@@ -101,8 +101,18 @@ class Api
         return Transaction::refund($params->offsetGet('transactionId'), $params->offsetGet('amount'));
     }
 
+    public function search(array $params)
+    {
+        return Transaction::search($params);
+    }
+
     public function createCustomer(array $params)
     {
         return Customer::createNoValidate($params);
+    }
+
+    public function updateCustomer(string $customerId, array $params)
+    {
+        return Customer::updateNoValidate($customerId, $params);
     }
 }

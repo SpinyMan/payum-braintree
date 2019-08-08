@@ -40,9 +40,9 @@ class DoSaleAction extends BaseApiAwareAction
             'paymentMethodToken',
             'creditCard',
             'billing',
-            'shipping',
-            //'customer',
-            //'customerId',
+            //'shipping',
+            'customer',
+            'customerId',
             'orderId',
         ];
 

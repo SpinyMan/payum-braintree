@@ -6,11 +6,9 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareTrait;
-use Payum\Core\Model\Identity;
 use Payum\Core\Request\RenderTemplate;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Reply\HttpResponse;
-
 use Payum\Braintree\Request\ObtainPaymentMethodNonce;
 use Payum\Braintree\Request\Api\GenerateClientToken;
 
@@ -20,12 +18,14 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
 
     private $templateName;
 
+    private $config;
+
     protected $cardholderAuthenticationRequired;
 
-    public function __construct($templateName)
+    public function __construct(ArrayObject $config)
     {
-        $this->templateName = $templateName;
-        
+        $this->config = $config;
+        $this->templateName = $this->config['payum.template.obtain_payment_method_nonce'];
         $this->cardholderAuthenticationRequired = true;
     }
 
@@ -45,8 +45,7 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
 
         $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
         
-        if (true == $details->offsetExists('paymentMethodNonce')) {
-
+        if ($details->offsetExists('paymentMethodNonce')) {
             $request->setResponse($details['paymentMethodNonce']);
             return;
         }
@@ -54,9 +53,7 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
         $this->gateway->execute($clientHttpRequest = new GetHttpRequest());
         
         if (array_key_exists('payment_method_nonce', $clientHttpRequest->request)) {
-
             $paymentMethodNonce = $clientHttpRequest->request['payment_method_nonce'];
-
             $request->setResponse($paymentMethodNonce);
             return;
         }
@@ -75,6 +72,7 @@ class ObtainPaymentMethodNonceAction implements ActionInterface, GatewayAwareInt
         $payum->getStorage($details)->update($details);
 
         $this->gateway->execute($template = new RenderTemplate($this->templateName, [
+            'env' => $this->config->offsetGet('sandbox') ? 'sandbox' : 'production',
             'formAction' => $clientHttpRequest->uri,
             'clientToken' => $details['clientToken'],
             'amount' => $details['amount'],

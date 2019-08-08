@@ -5,7 +5,7 @@ namespace Payum\Braintree\Action;
 use Payum\Braintree\Request\Api\CreateCustomer;
 use Payum\Braintree\Request\Purchase;
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Model\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Request\Authorize;
@@ -44,7 +44,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
     {
         RequestNotSupportedException::assertSupports($this, $request);
 
-        /** @var \Payum\Core\Model\ArrayObject $details */
+        /** @var ArrayObject $details */
         $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
 
         if ($details->offsetExists('status')) {
@@ -54,22 +54,25 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         try {
             $this->obtainPaymentMethodNonce($details);
 
-            if ($details->offsetExists('pre-authorized') && $details->offsetGet('pre-authorized') && ! $details->offsetExists('customer')) {
+            /*if (! $details->offsetExists('customer')) {
                 $this->createCustomer($details);
-            } else {
+                $details->offsetUnset('creditCard');
+            }*/
+
+            if (! $details->offsetExists('pre-authorized') || ! $details->offsetGet('pre-authorized')) {
                 //$this->obtainCardholderAuthentication($details);
-
                 $this->doSaleTransaction($details);
-
                 $this->resolveStatus($details);
 
-                if (! $details->offsetExists('paymentMethodNonce') || ! $details->offsetExists('paymentMethodNonceInfo') || ! $details->offsetExists('sale') || ! $details->offsetExists('status')) {
+                if (! $details->offsetExists('paymentMethodNonce')
+                    || ! $details->offsetExists('paymentMethodNonceInfo')
+                    || ! $details->offsetExists('sale')
+                    || ! $details->offsetExists('status')) {
                     throw new \Exception('Validation error');
                 }
             }
         }
         catch(RuntimeException $exception) {
-
             $details['status'] = 'failed';
             $details['status_reason'] = $exception->getMessage();
         }
@@ -80,7 +83,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $payum->getStorage($details)->update($details);
     }
 
-    protected function obtainPaymentMethodNonce($details)
+    protected function obtainPaymentMethodNonce(ArrayObject $details)
     {
         if ($details->offsetExists('paymentMethodNonce')) {
             return;
@@ -117,7 +120,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $this->findPaymentMethodNonceInfo($details);
     }*/
 
-    protected function findPaymentMethodNonceInfo($details)
+    protected function findPaymentMethodNonceInfo(ArrayObject $details)
     {
         $this->gateway->execute($request = new FindPaymentMethodNonce($details['paymentMethodNonce']));
 
@@ -130,7 +133,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $details['paymentMethodNonceInfo'] = PaymentMethodNonceArray::toArray($paymentMethodInfo);
     }
 
-    protected function doSaleTransaction($details)
+    protected function doSaleTransaction(ArrayObject $details)
     {
         if ($details->offsetExists('sale')) {
             return;
@@ -147,27 +150,22 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         }
 
         $details['saleOptions'] = $saleOptions;
-
+        /** @see https://developers.braintreepayments.com/reference/request/transaction/sale/php */
         $this->gateway->execute($request = new DoSale($details));
-
         $transaction = $request->getResponse();
 
         $details['sale'] = TransactionResultArray::toArray($transaction);
     }
 
-    protected function createCustomer($details)
+    /*protected function createCustomer($details)
     {
         $request = new CreateCustomer($details);
         $this->gateway->execute($request);
-        /** @var \Braintree\Customer $customer */
         $customer = $request->getResponse();
         $details['customer'] = $customer->jsonSerialize();
-    }
+    }*/
 
-    /**
-     * @param \Payum\Core\Model\ArrayObject $details
-     */
-    protected function resolveStatus($details)
+    protected function resolveStatus(ArrayObject $details)
     {
         $sale = $details->offsetGet('sale');
 
