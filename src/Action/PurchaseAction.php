@@ -64,8 +64,10 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 $this->doSaleTransaction($details);
                 $this->resolveStatus($details);
 
-                if (! $details->offsetExists('paymentMethodNonce')
-                    || ! $details->offsetExists('paymentMethodNonceInfo')
+                $nonceExists = (
+                        $details->offsetExists('paymentMethodNonce') && $details->offsetExists('paymentMethodNonceInfo')
+                    ) || $details->offsetExists('customerId');
+                if (! $nonceExists
                     || ! $details->offsetExists('sale')
                     || ! $details->offsetExists('status')) {
                     throw new \Exception('Validation error');
@@ -85,7 +87,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
 
     protected function obtainPaymentMethodNonce(ArrayObject $details)
     {
-        if ($details->offsetExists('paymentMethodNonce')) {
+        if ($details->offsetExists('paymentMethodNonce') || $details->offsetExists('customerId')) {
             return;
         }
 
