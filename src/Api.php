@@ -2,6 +2,7 @@
 namespace Payum\Braintree;
 
 use Braintree\Customer;
+use Braintree\PaymentMethod;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Braintree\Configuration;
 use Braintree\ClientToken;
@@ -114,5 +115,10 @@ class Api
     public function updateCustomer(string $customerId, array $params)
     {
         return Customer::updateNoValidate($customerId, $params);
+    }
+
+    public function createPaymentMethod(array $params)
+    {
+        return PaymentMethod::create($params);
     }
 }

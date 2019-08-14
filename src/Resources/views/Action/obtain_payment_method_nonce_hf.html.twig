@@ -78,14 +78,36 @@
                     </div>
                     <div id="ach-direct" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
                         <div class="panel-body">
-                            <button id="bank-login-button" class="btn btn-default">Login</button>
+                            <div class="form-group">
+                                <label for="ach-routingNumber">Routing Number</label>
+                                <input type="text" id="ach-routingNumber" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-accountNumber">Account Number</label>
+                                <input type="text" id="ach-accountNumber" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-firstName">First Name</label>
+                                <input type="text" id="ach-firstName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-lastName">Last Name</label>
+                                <input type="text" id="ach-lastName" class="form-control">
+                            </div>
+                            <div class="form-group" style="display: none">
+                                <label for="ach-billingAddress">Billing Address</label>
+                                <input type="text" id="ach-billingAddress" class="form-control">
+                            </div>
+
+                            <button id="bank-login-button" class="btn btn-default">Checkout</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <form method="POST" action="{{ formAction }}" id="braintree-payment-form">
+        <form method="POST" action="{{ formAction }}" id="braintree-payment-form" style="display: none">
             <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
+            <input type="submit" id="braintree-payment-submit" />
         </form>
     {% endblock %}
 
@@ -115,7 +137,7 @@
                 }
             }
 
-            const braintreePaymentForm = document.querySelector('#braintree-payment-form'),
+            const braintreePaymentSubmit = document.querySelector('#braintree-payment-submit'),
                 braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form');
             var threeDSecure;
 
@@ -127,7 +149,7 @@
                 locality: '',
                 postalCode: '',
                 region: '',
-                streetAddress: '',
+                streetAddress: ''
             };
             document.dispatchEvent(billingEvent);
 
@@ -136,7 +158,8 @@
                     authorization: {{ clientToken|json_encode|raw }},
                 }, function(err, clientInstance) {
                     if (err) {
-                        console.error(err);
+                        //console.error(err);
+                        fireBraintreeError(err);
                         return;
                     }
 
@@ -151,7 +174,8 @@
                         // This could happen if there was a network error or if it's incorrectly
                         // configured.
                         if (paypalCheckoutErr) {
-                            console.error('paypalCheckoutErr:', paypalCheckoutErr);
+                            //console.error('paypalCheckoutErr:', paypalCheckoutErr);
+                            fireBraintreeError(paypalCheckoutErr);
                             return;
                         }
 
@@ -173,14 +197,14 @@
 
                             onAuthorize: function (data, actions) {
                                 return paypalCheckoutInstance.tokenizePayment(data, function (onAuthorizeErr, onAuthorizePayload) {
-                                    if (err) {
-                                        console.log('onAuthorizeErr:', onAuthorizeErr);
+                                    if (onAuthorizeErr) {
+                                        //console.log('onAuthorizeErr:', onAuthorizeErr);
+                                        fireBraintreeError(onAuthorizeErr);
                                         return false;
                                     }
                                     console.log('onAuthorizePayload:', onAuthorizePayload);
                                     // Submit `payload.nonce` to your server.
-                                    document.querySelector('#payment_method_nonce').value = onAuthorizePayload.nonce;
-                                    braintreePaymentForm.submit();
+                                    tokenizedPayload(onAuthorizePayload.nonce);
                                 });
                             },
 
@@ -199,40 +223,49 @@
                         client: clientInstance
                     }, function (usBankAccountErr, usBankAccountInstance) {
                         if (usBankAccountErr) {
-                            console.error('usBankAccountErr:', usBankAccountErr);
+                            //console.error('usBankAccountErr:', usBankAccountErr);
+                            fireBraintreeError(usBankAccountErr);
                             throw usBankAccountErr;
                         }
 
                         document.getElementById('bank-login-button').addEventListener('click', function (e) {
                             e.preventDefault();
 
-                            var bankLogin = {
-                                displayName: 'My Merchant',
+                            var bankDetails = {
+                                routingNumber: document.querySelector('#ach-routingNumber').value,
+                                accountNumber: document.querySelector('#ach-accountNumber').value,
+                                accountType: 'savings',
                                 ownershipType: 'personal',
-                                billingAddress: billingEvent.address
+                                billingAddress: {
+                                    streetAddress: billingEvent.address.streetAddress,
+                                    locality: billingEvent.address.locality,
+                                    region: billingEvent.address.region,
+                                    postalCode: billingEvent.address.postalCode
+                                }
                             };
 
-                            if (bankLogin.ownershipType === 'personal') {
-                                bankLogin.firstName = 'First';
-                                bankLogin.lastName = 'Last';
+                            if (bankDetails.ownershipType === 'personal') {
+                                bankDetails.firstName = document.querySelector('#ach-firstName').value;
+                                bankDetails.lastName = document.querySelector('#ach-lastName').value;
                             } else {
-                                bankLogin.businessName = $('#business-name').val();
+                                bankDetails.businessName = document.querySelector('#business-name').value;
                             }
 
                             // Use the usBankAccountInstance here.
                             usBankAccountInstance.tokenize({
-                                //bankDetails: bankDetails, // or
-                                bankLogin: bankLogin,
+                                bankDetails: bankDetails,
                                 mandateText: 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.'
                             }, function (tokenizeErr, tokenizedPayload) {
                                 if (tokenizeErr) {
-                                    console.error('tokenizedPayload:', tokenizedPayload);
+                                    //console.error('tokenizedPayload:', tokenizedPayload);
+                                    fireBraintreeError(tokenizeErr);
                                     return false;
                                 }
 
                                 // Submit tokenizedPayload.nonce to your server as you would
                                 // other payment method nonces.
                                 console.log('tokenizedPayload:', tokenizedPayload);
+                                sendBraintreeNonce(tokenizedPayload.nonce);
                             });
                         });
                     });
@@ -243,7 +276,8 @@
                         version: 2
                     }, function(threeDSecureErr, threeDSecureInstance) {
                         if (threeDSecureErr) {
-                            console.log('threeDSecureErr:', threeDSecureErr);
+                            //console.log('threeDSecureErr:', threeDSecureErr);
+                            fireBraintreeError(threeDSecureErr);
                             return;
                         }
 
@@ -281,7 +315,8 @@
                         }
                     }, function(hostedFieldsErr, hostedFieldsInstance) {
                         if (hostedFieldsErr) {
-                            console.error('hostedFieldsError:', hostedFieldsErr);
+                            //console.error('hostedFieldsError:', hostedFieldsErr);
+                            fireBraintreeError(hostedFieldsErr);
                             return;
                         }
 
@@ -437,28 +472,26 @@
                                         amount: {{ amount|json_encode|raw }},
                                         nonce: payload.nonce,
                                         onLookupComplete: function (result, callback) {
-                                            console.log('result: ', result);
-                                            /*if (!result.threeDSecureInfo.liabilityShifted) {
-                                                var resultEvent = new Event('braintree.payload');
-                                                resultEvent.payload = result.threeDSecureInfo;
-                                                document.dispatchEvent(resultEvent);
+                                            //console.log('result: ', result);
+                                            if (!result.threeDSecureInfo.liabilityShifted && !result.threeDSecureInfo.liabilityShiftPossible) {
+                                                fireBraintreeError(result.threeDSecureInfo);
                                                 return false;
-                                            }*/
+                                            }
                                             callback();
                                         },
                                         onUserClose: function () {}
                                     }, function (verifyErr, verifyResponse) {
                                         if (verifyErr) {
                                             // Handle errors
-                                            console.log('verifyErr:', verifyErr);
+                                            //console.log('verifyErr:', verifyErr);
+                                            fireBraintreeError(verifyErr);
                                             return;
                                         }
                                         // 3D Secure finished.
                                         // Use nonce in response to create transaction. This should be different from the nonce created on your server.
                                         console.log('After verify:', verifyResponse);
 
-                                        document.querySelector('#payment_method_nonce').value = verifyResponse.nonce;
-                                        braintreePaymentForm.submit();
+                                        sendBraintreeNonce(verifyResponse.nonce);
                                     });
                                     return false;
                                 }
@@ -468,6 +501,18 @@
                         });
                     });
                 });
+            }
+
+            function sendBraintreeNonce(nonce) {
+                document.querySelector('#payment_method_nonce').value = nonce;
+                braintreePaymentSubmit.click();
+            }
+
+            function fireBraintreeError(err) {
+                console.log(err);
+                var resultEvent = new Event('braintree.error');
+                resultEvent.payload = err;
+                document.dispatchEvent(resultEvent);
             }
         </script>
     {% endblock %}
