@@ -77,7 +77,7 @@
                         </h4>
                     </div>
                     <div id="ach-direct" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-                        <div class="panel-body">
+                        <div id="ach-direct-container" class="panel-body">
                             <div class="form-group">
                                 <label for="ach-routingNumber">Routing Number</label>
                                 <input type="text" id="ach-routingNumber" class="form-control">
@@ -87,12 +87,30 @@
                                 <input type="text" id="ach-accountNumber" class="form-control">
                             </div>
                             <div class="form-group">
+                                <label for="ach-accountType">Account Type</label>
+                                <select class="form-control" id="ach-accountType">
+                                    <option value="checking">Checking</option>
+                                    <option value="savings">Savings</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-ownershipType">Ownership Type</label>
+                                <select class="form-control" id="ach-ownershipType">
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+                            <div class="form-group ach-ownershipType personal">
                                 <label for="ach-firstName">First Name</label>
                                 <input type="text" id="ach-firstName" class="form-control">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group ach-ownershipType personal">
                                 <label for="ach-lastName">Last Name</label>
                                 <input type="text" id="ach-lastName" class="form-control">
+                            </div>
+                            <div class="form-group ach-ownershipType business" style="display: none">
+                                <label for="ach-businessName">Business Name</label>
+                                <input type="text" id="ach-businessName" class="form-control">
                             </div>
                             <div class="form-group" style="display: none">
                                 <label for="ach-billingAddress">Billing Address</label>
@@ -127,7 +145,7 @@
                 if (document.getElementById(btId) === null) {
                     var s = document.createElement('script');
                     s.id = btId;
-                    s.src = (/^http(s)?:/.test(src[i]) ? '' : 'https://js.braintreegateway.com/web/3.50.0/js/') + src[i] + '.min.js';
+                    s.src = (/^http(s)?:/.test(src[i]) ? '' : 'https://js.braintreegateway.com/web/3.50.1/js/') + src[i] + '.min.js';
                     if (i == 5) {
                         s.onload = setupForm;
                     }
@@ -138,6 +156,7 @@
             }
 
             const braintreePaymentSubmit = document.querySelector('#braintree-payment-submit'),
+                braintreeAchDirect = document.querySelector('#ach-direct-container'),
                 braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form');
             var threeDSecure;
 
@@ -152,6 +171,18 @@
                 streetAddress: ''
             };
             document.dispatchEvent(billingEvent);
+
+            if (billingEvent.address.countryName !== 'United States') {
+                braintreeAchDirect.innerHTML = 'Not available for your country';
+            }
+
+            document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
+                let aot = document.querySelectorAll('.ach-ownershipType');
+                for (let i of aot) {
+                    i.style.display = 'none';
+                }
+                document.querySelector('.ach-ownershipType.' + e.target.value).style.display = 'block';
+            });
 
             function setupForm() {
                 braintree.client.create({
@@ -228,14 +259,16 @@
                             throw usBankAccountErr;
                         }
 
+                        document.dispatchEvent(new Event('braintree.usBankAccount.created'));
+
                         document.getElementById('bank-login-button').addEventListener('click', function (e) {
                             e.preventDefault();
 
                             var bankDetails = {
                                 routingNumber: document.querySelector('#ach-routingNumber').value,
                                 accountNumber: document.querySelector('#ach-accountNumber').value,
-                                accountType: 'savings',
-                                ownershipType: 'personal',
+                                accountType: document.querySelector('#ach-accountType').value,
+                                ownershipType: document.querySelector('#ach-ownershipType').value,
                                 billingAddress: {
                                     streetAddress: billingEvent.address.streetAddress,
                                     locality: billingEvent.address.locality,
