@@ -19,7 +19,7 @@
                                 <form id="braintree-hosted-fields-form" class="needs-validation" novalidate="">
                                     <div class="form-group">
                                         <label for="cc-name">Name on card</label>
-                                        <input type="text" id="cc-name" name="cc-name" class="form-control">
+                                        <input type="text" id="cc-name" class="form-control">
                                         <small class="text-muted">Full name as displayed on card</small>
                                     </div>
 
@@ -51,7 +51,7 @@
                                     <hr class="mb-4">
 
                                     <div class="text-center">
-                                        <button class="btn btn-primary btn-lg" type="submit">Pay with <span id="card-brand">Card</span></button>
+                                        <button id="card-brand-button" class="btn btn-primary btn-lg" type="submit" disabled="disabled">Pay with <span id="card-brand">Card</span></button>
                                     </div>
                                 </form>
                             </div>
@@ -132,57 +132,58 @@
     {% block braintree_init_js %}
 
         <script type="text/javascript">
-            var src = [
-                'https://www.paypalobjects.com/api/checkout',
-                'hosted-fields',
-                'three-d-secure',
-                'paypal-checkout',
-                'us-bank-account',
-                'client'
-            ];
-            for (i in src) {
-                var btId = 'bt-'+src[i];
-                if (document.getElementById(btId) === null) {
-                    var s = document.createElement('script');
-                    s.id = btId;
-                    s.src = (/^http(s)?:/.test(src[i]) ? '' : 'https://js.braintreegateway.com/web/3.50.1/js/') + src[i] + '.min.js';
-                    if (i == 5) {
-                        s.onload = setupForm;
-                    }
-                    document.getElementsByTagName('head')[0].appendChild(s);
-                } else if (i == 5) {
-                    setupForm();
-                }
-            }
-
             const braintreePaymentSubmit = document.querySelector('#braintree-payment-submit'),
                 braintreeAchDirect = document.querySelector('#ach-direct-container'),
+                cardBrandButton = document.querySelector('#card-brand-button'),
                 braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form');
             var threeDSecure;
 
-            const billingEvent = new Event('braintree.billing-address');
-            billingEvent.address = {
-                countryName: '',
-                firstName: '',
-                lastName: '',
-                locality: '',
-                postalCode: '',
-                region: '',
-                streetAddress: ''
-            };
-            document.dispatchEvent(billingEvent);
+            prefillBillingAddress();
+            loadScripts();
 
-            if (billingEvent.address.countryName !== 'United States') {
-                braintreeAchDirect.innerHTML = 'Not available for your country';
+            function loadScripts() {
+                var src = [
+                    'https://www.paypalobjects.com/api/checkout',
+                    'hosted-fields',
+                    'three-d-secure',
+                    'paypal-checkout',
+                    'us-bank-account',
+                    'client',
+                ];
+                for (i in src) {
+                    var btId = 'bt-'+src[i];
+                    if (document.getElementById(btId) === null) {
+                        var s = document.createElement('script');
+                        s.id = btId;
+                        s.async = true;
+                        s.src = (/^http(s)?:/.test(src[i]) ? '' : 'https://js.braintreegateway.com/web/3.50.1/js/') + src[i] + '.min.js';
+                        if (i == 5) {
+                            s.onload = setupForm;
+                        }
+                        document.getElementsByTagName('head')[0].appendChild(s);
+                    } else if (i == 5) {
+                        setupForm();
+                    }
+                }
             }
 
-            document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
-                let aot = document.querySelectorAll('.ach-ownershipType');
-                for (let i of aot) {
-                    i.style.display = 'none';
+            function prefillBillingAddress() {
+                const billingEvent = new Event('braintree.billing-address');
+                billingEvent.address = {
+                    countryName: '',
+                    firstName: '',
+                    lastName: '',
+                    locality: '',
+                    postalCode: '',
+                    region: '',
+                    streetAddress: ''
+                };
+                document.dispatchEvent(billingEvent);
+
+                if (billingEvent.address.countryName !== 'United States') {
+                    braintreeAchDirect.innerHTML = 'Not available for your country';
                 }
-                document.querySelector('.ach-ownershipType.' + e.target.value).style.display = 'block';
-            });
+            }
 
             function setupForm() {
                 braintree.client.create({
@@ -235,7 +236,7 @@
                                     }
                                     console.log('onAuthorizePayload:', onAuthorizePayload);
                                     // Submit `payload.nonce` to your server.
-                                    tokenizedPayload(onAuthorizePayload.nonce);
+                                    sendBraintreeNonce(onAuthorizePayload.nonce);
                                 });
                             },
 
@@ -260,6 +261,17 @@
                         }
 
                         document.dispatchEvent(new Event('braintree.usBankAccount.created'));
+
+                        document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
+                            let aot = document.querySelectorAll('.ach-ownershipType');
+                            for (let i of aot) {
+                                i.style.display = 'none';
+                            }
+                            aot = document.querySelectorAll('.ach-ownershipType.' + e.target.value);
+                            for (let i of aot) {
+                                i.style.display = 'block';
+                            }
+                        });
 
                         document.getElementById('bank-login-button').addEventListener('click', function (e) {
                             e.preventDefault();
@@ -307,7 +319,7 @@
                     braintree.threeDSecure.create({
                         client: clientInstance,
                         version: 2
-                    }, function(threeDSecureErr, threeDSecureInstance) {
+                    }, function (threeDSecureErr, threeDSecureInstance) {
                         if (threeDSecureErr) {
                             //console.log('threeDSecureErr:', threeDSecureErr);
                             fireBraintreeError(threeDSecureErr);
@@ -325,16 +337,24 @@
                                 // bootstrap styles
                                 'font-size': '1rem',
                                 color: '#495057'
-                            }
+                            },
+                            'input::placeholder': {
+                                color: '#ccc'
+                            },
+                            '.valid': {
+                                'color': 'green'
+                            },
+                            '.invalid': {
+                                'color': 'red'
+                            },
                         },
                         fields: {
                             number: {
                                 selector: '#cc-number',
-                                placeholder: '4111 1111 1111 1111'
+                                placeholder: '0000 0000 0000 0000'
                             },
                             cvv: {
                                 selector: '#cc-cvv',
-                                placeholder: '123',
                                 type: 'password'
                             },
                             expirationDate: {
@@ -346,7 +366,7 @@
                                 placeholder: '12345'
                             }
                         }
-                    }, function(hostedFieldsErr, hostedFieldsInstance) {
+                    }, function (hostedFieldsErr, hostedFieldsInstance) {
                         if (hostedFieldsErr) {
                             //console.error('hostedFieldsError:', hostedFieldsErr);
                             fireBraintreeError(hostedFieldsErr);
@@ -381,7 +401,7 @@
                             validateInput(ccName);
                         });
 
-                        hostedFieldsInstance.on('validityChange', function(e) {
+                        hostedFieldsInstance.on('validityChange', function (e) {
                             var field = e.fields[e.emittedBy];
 
                             // Remove any previously applied error or warning classes
@@ -396,26 +416,36 @@
                             } else {
                                 field.container.classList.add('is-invalid');
                             }
+
+                            //e.fields.name = {isValid: validateInput(ccName)};
+                            var fields = Object.keys(e.fields);
+                            for (var field of fields) {
+                                if (! e.fields[field].isValid) {
+                                    cardBrandButton.disabled = true;
+                                    return;
+                                }
+                            }
+                            cardBrandButton.disabled = false;
                         });
 
-                        hostedFieldsInstance.on('cardTypeChange', function(e) {
-                            var cardBrand = $('#card-brand');
-                            var cvvLabel = document.getElementById('for-cc-cvv');
+                        hostedFieldsInstance.on('cardTypeChange', function (e) {
+                            var cardBrand = document.querySelector('#card-brand'),
+                                cvvLabel = document.querySelector('#for-cc-cvv');
 
                             if (e.cards.length === 1) {
                                 var card = e.cards[0];
 
-                                cardBrand.text(card.niceType);
+                                cardBrand.textContent =card.niceType;
                                 // update the security code label
                                 cvvLabel.textContent = card.code.name;
                             } else {
                                 // reset to defaults
-                                cardBrand.text('Card');
+                                cardBrand.textContent = 'Card';
                                 cvvLabel.textContent = 'CVV';
                             }
                         });
 
-                        braintreeHostedFieldsForm.addEventListener('submit', function(e) {
+                        braintreeHostedFieldsForm.addEventListener('submit', function (e) {
                             e.preventDefault();
 
                             var formIsInvalid = false,
@@ -430,7 +460,7 @@
                             // Loop through the Hosted Fields and check
                             // for validity, apply the is-invalid class
                             // to the field container if invalid
-                            Object.keys(state.fields).forEach(function(field) {
+                            Object.keys(state.fields).forEach(function (field) {
                                 if (!state.fields[field].isValid) {
                                     state.fields[field].container.classList.add('is-invalid');
                                     formIsInvalid = true;
@@ -442,52 +472,13 @@
                                 return;
                             }
 
-                            hostedFieldsInstance.tokenize({}, function(tokenizeErr, payload) {
-                                if (tokenizeErr) {
-                                    switch (tokenizeErr.code) {
-                                        case 'HOSTED_FIELDS_FIELDS_EMPTY':
-                                            // occurs when none of the fields are filled in
-                                            console.error('All fields are empty! Please fill out the form.');
-                                            break;
-                                        case 'HOSTED_FIELDS_FIELDS_INVALID':
-                                            // occurs when certain fields do not pass client side validation
-                                            console.error('Some fields are invalid:', tokenizeErr.details.invalidFieldKeys);
+                            cardBrandButton.disabled = true;
 
-                                            // you can also programtically access the field containers for the invalid fields
-                                            tokenizeErr.details.invalidFields.forEach(function (fieldContainer) {
-                                                fieldContainer.className = 'invalid';
-                                            });
-                                            break;
-                                        case 'HOSTED_FIELDS_TOKENIZATION_FAIL_ON_DUPLICATE':
-                                            // occurs when:
-                                            //   * the client token used for client authorization was generated
-                                            //     with a customer ID and the fail on duplicate payment method
-                                            //     option is set to true
-                                            //   * the card being tokenized has previously been vaulted (with any customer)
-                                            // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.fail_on_duplicate_payment_method
-                                            console.error('This payment method already exists in your vault.');
-                                            break;
-                                        case 'HOSTED_FIELDS_TOKENIZATION_CVV_VERIFICATION_FAILED':
-                                            // occurs when:
-                                            //   * the client token used for client authorization was generated
-                                            //     with a customer ID and the verify card option is set to true
-                                            //     and you have credit card verification turned on in the Braintree
-                                            //     control panel
-                                            //   * the cvv does not pass verfication (https://developers.braintreepayments.com/reference/general/testing/#avs-and-cvv/cid-responses)
-                                            // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.verify_card
-                                            console.error('CVV did not pass verification');
-                                            break;
-                                        case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
-                                            // occurs for any other tokenization error on the server
-                                            console.error('Tokenization failed server side. Is the card valid?');
-                                            break;
-                                        case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
-                                            // occurs when the Braintree gateway cannot be contacted
-                                            console.error('Network error occurred when tokenizing.');
-                                            break;
-                                        default:
-                                            console.error('Something bad happened!', tokenizeErr);
-                                    }
+                            hostedFieldsInstance.tokenize({
+                                cardholderName: document.querySelector('#cc-name')
+                            }, function(tokenizeErr, payload) {
+                                if (tokenizeErr) {
+                                    fireBraintreeError(tokenizeErr);
                                     return;
                                 }
 
@@ -506,17 +497,15 @@
                                         nonce: payload.nonce,
                                         onLookupComplete: function (result, callback) {
                                             //console.log('result: ', result);
-                                            if (!result.threeDSecureInfo.liabilityShifted && !result.threeDSecureInfo.liabilityShiftPossible) {
-                                                fireBraintreeError(result.threeDSecureInfo);
-                                                return false;
-                                            }
                                             callback();
                                         },
                                         onUserClose: function () {}
                                     }, function (verifyErr, verifyResponse) {
                                         if (verifyErr) {
                                             // Handle errors
-                                            //console.log('verifyErr:', verifyErr);
+                                            if (verifyErr.code === 'THREEDS_AUTHENTICATION_IN_PROGRESS') {
+                                                verifyErr.message += ' You have to reload the page.';
+                                            }
                                             fireBraintreeError(verifyErr);
                                             return;
                                         }
@@ -544,7 +533,7 @@
             function fireBraintreeError(err) {
                 console.log(err);
                 var resultEvent = new Event('braintree.error');
-                resultEvent.payload = err;
+                resultEvent.exception = err;
                 document.dispatchEvent(resultEvent);
             }
         </script>
