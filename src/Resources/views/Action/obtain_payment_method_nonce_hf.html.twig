@@ -8,10 +8,11 @@
             <div class="panel-group" id="braintree-accordion" role="tablist" aria-multiselectable="true">
                 <div class="panel panel-default">
                     <div class="panel-heading" role="tab" id="headingOne">
-                        <h4 class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" href="#creadit-card" aria-expanded="true" aria-controls="creadit-card">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#creadit-card" aria-expanded="true" aria-controls="creadit-card">
+                            <input type="radio" name="braintree-payment-type" value="creditCard" style="display: none">
                             <i class="fa fa-credit-card"></i>
                             Card
-                        </h4>
+                        </label>
                     </div>
                     <div id="creadit-card" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
                         <div class="panel-body">
@@ -59,10 +60,11 @@
                     </div>
 
                     <div class="panel-heading" role="tab" id="headingTwo">
-                        <h4 class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" href="#paypal" aria-expanded="true" aria-controls="paypal">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#paypal" aria-expanded="true" aria-controls="paypal">
+                            <input type="radio" name="braintree-payment-type" value="PayPalAccount" style="display: none">
                             <i class="fa fa-paypal"></i>
                             Paypal
-                        </h4>
+                        </label>
                     </div>
                     <div id="paypal" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
                         <div class="panel-body">
@@ -71,10 +73,11 @@
                     </div>
 
                     <div class="panel-heading" role="tab" id="headingThree">
-                        <h4 class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" href="#ach-direct" aria-expanded="true" aria-controls="ach-direct">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#ach-direct" aria-expanded="true" aria-controls="ach-direct">
+                            <input type="radio" name="braintree-payment-type" value="UsBankAccount" style="display: none">
                             <i class="fa fa-ach"></i>
                             ACH Direct
-                        </h4>
+                        </label>
                     </div>
                     <div id="ach-direct" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
                         <div id="ach-direct-container" class="panel-body">
@@ -125,6 +128,7 @@
         </div>
         <form method="POST" action="{{ formAction }}" id="braintree-payment-form" style="display: none">
             <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
+            <input type="hidden" name="amount" id="braintree_payment_amount" value="{{ amount|json_encode|raw }}" />
             <input type="submit" id="braintree-payment-submit" />
         </form>
     {% endblock %}
@@ -135,39 +139,49 @@
             const braintreePaymentSubmit = document.querySelector('#braintree-payment-submit'),
                 braintreeAchDirect = document.querySelector('#ach-direct-container'),
                 cardBrandButton = document.querySelector('#card-brand-button'),
-                braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form');
-            var threeDSecure;
+                braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form'),
+                htmlHead = document.getElementsByTagName('head')[0],
+                braintreePaymentAmount = document.querySelector('#braintree_payment_amount');
+            var threeDSecure,
+                ACHEnabled = true;
 
-            prefillBillingAddress();
-            loadScripts();
+            const btScriptSrc = [
+                'https://www.paypalobjects.com/api/checkout',
+                'hosted-fields',
+                'three-d-secure',
+                'paypal-checkout',
+                'us-bank-account',
+                'client',
+            ];
 
-            function loadScripts() {
-                var src = [
-                    'https://www.paypalobjects.com/api/checkout',
-                    'hosted-fields',
-                    'three-d-secure',
-                    'paypal-checkout',
-                    'us-bank-account',
-                    'client',
-                ];
-                for (i in src) {
-                    var btId = 'bt-'+src[i];
-                    if (document.getElementById(btId) === null) {
-                        var s = document.createElement('script');
-                        s.id = btId;
-                        s.async = true;
-                        s.src = (/^http(s)?:/.test(src[i]) ? '' : 'https://js.braintreegateway.com/web/3.50.1/js/') + src[i] + '.min.js';
-                        if (i == 5) {
-                            s.onload = setupForm;
-                        }
-                        document.getElementsByTagName('head')[0].appendChild(s);
-                    } else if (i == 5) {
-                        setupForm();
-                    }
+            prefillBTBillingAddress();
+            loadBTScripts();
+
+            function loadBTScripts() {
+                loadBTScript(0);
+            }
+
+            function loadBTScript(i) {
+                if (typeof btScriptSrc[i] === 'undefined') {
+                    setupBTForm();
+                    return;
+                }
+                var btId = 'bt-'+btScriptSrc[i];
+                if (document.getElementById(btId) === null) {
+                    var s = document.createElement('script');
+                    s.id = btId;
+                    s.async = true;
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.51.0/js/') + btScriptSrc[i] + '.min.js';
+                    s.onload = function () {
+                        loadBTScript(i + 1);
+                    };
+                    htmlHead.appendChild(s);
+                } else {
+                    loadBTScript(i + 1);
                 }
             }
 
-            function prefillBillingAddress() {
+            function prefillBTBillingAddress() {
                 const billingEvent = new Event('braintree.billing-address');
                 billingEvent.address = {
                     countryName: '',
@@ -180,12 +194,17 @@
                 };
                 document.dispatchEvent(billingEvent);
 
-                if (billingEvent.address.countryName !== 'United States') {
+                if (billingEvent.address.countryName !== 'United States of America') {
+                    ACHEnabled = false;
                     braintreeAchDirect.innerHTML = 'Not available for your country';
                 }
             }
 
-            function setupForm() {
+            function getBTAmount() {
+                return parseFloat(braintreePaymentAmount.value).toFixed(2);
+            }
+
+            function setupBTForm() {
                 braintree.client.create({
                     authorization: {{ clientToken|json_encode|raw }},
                 }, function(err, clientInstance) {
@@ -221,7 +240,7 @@
                                     // http://braintree.github.io/braintree-web/current/PayPalCheckout.html#createPayment
                                     flow: 'vault',
                                     intent: 'sale',
-                                    amount: {{ amount|json_encode|raw }},
+                                    amount: getBTAmount(),
                                     currency: '{{ currency|json_encode|raw }}',
                                     //billingAgreementDescription: 'Your agreement description',
                                 });
@@ -251,69 +270,71 @@
                     });
 
                     //ACH
-                    braintree.usBankAccount.create({
-                        client: clientInstance
-                    }, function (usBankAccountErr, usBankAccountInstance) {
-                        if (usBankAccountErr) {
-                            //console.error('usBankAccountErr:', usBankAccountErr);
-                            fireBraintreeError(usBankAccountErr);
-                            throw usBankAccountErr;
-                        }
-
-                        document.dispatchEvent(new Event('braintree.usBankAccount.created'));
-
-                        document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
-                            let aot = document.querySelectorAll('.ach-ownershipType');
-                            for (let i of aot) {
-                                i.style.display = 'none';
+                    if (ACHEnabled) {
+                        braintree.usBankAccount.create({
+                            client: clientInstance
+                        }, function (usBankAccountErr, usBankAccountInstance) {
+                            if (usBankAccountErr) {
+                                //console.error('usBankAccountErr:', usBankAccountErr);
+                                fireBraintreeError(usBankAccountErr);
+                                throw usBankAccountErr;
                             }
-                            aot = document.querySelectorAll('.ach-ownershipType.' + e.target.value);
-                            for (let i of aot) {
-                                i.style.display = 'block';
-                            }
-                        });
 
-                        document.getElementById('bank-login-button').addEventListener('click', function (e) {
-                            e.preventDefault();
+                            document.dispatchEvent(new Event('braintree.usBankAccount.created'));
 
-                            var bankDetails = {
-                                routingNumber: document.querySelector('#ach-routingNumber').value,
-                                accountNumber: document.querySelector('#ach-accountNumber').value,
-                                accountType: document.querySelector('#ach-accountType').value,
-                                ownershipType: document.querySelector('#ach-ownershipType').value,
-                                billingAddress: {
-                                    streetAddress: billingEvent.address.streetAddress,
-                                    locality: billingEvent.address.locality,
-                                    region: billingEvent.address.region,
-                                    postalCode: billingEvent.address.postalCode
+                            document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
+                                let aot = document.querySelectorAll('.ach-ownershipType');
+                                for (let i of aot) {
+                                    i.style.display = 'none';
                                 }
-                            };
+                                aot = document.querySelectorAll('.ach-ownershipType.' + e.target.value);
+                                for (let i of aot) {
+                                    i.style.display = 'block';
+                                }
+                            });
 
-                            if (bankDetails.ownershipType === 'personal') {
-                                bankDetails.firstName = document.querySelector('#ach-firstName').value;
-                                bankDetails.lastName = document.querySelector('#ach-lastName').value;
-                            } else {
-                                bankDetails.businessName = document.querySelector('#business-name').value;
-                            }
+                            document.getElementById('bank-login-button').addEventListener('click', function (e) {
+                                e.preventDefault();
 
-                            // Use the usBankAccountInstance here.
-                            usBankAccountInstance.tokenize({
-                                bankDetails: bankDetails,
-                                mandateText: 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.'
-                            }, function (tokenizeErr, tokenizedPayload) {
-                                if (tokenizeErr) {
-                                    //console.error('tokenizedPayload:', tokenizedPayload);
-                                    fireBraintreeError(tokenizeErr);
-                                    return false;
+                                var bankDetails = {
+                                    routingNumber: document.querySelector('#ach-routingNumber').value,
+                                    accountNumber: document.querySelector('#ach-accountNumber').value,
+                                    accountType: document.querySelector('#ach-accountType').value,
+                                    ownershipType: document.querySelector('#ach-ownershipType').value,
+                                    billingAddress: {
+                                        streetAddress: billingEvent.address.streetAddress,
+                                        locality: billingEvent.address.locality,
+                                        region: billingEvent.address.region,
+                                        postalCode: billingEvent.address.postalCode
+                                    }
+                                };
+
+                                if (bankDetails.ownershipType === 'personal') {
+                                    bankDetails.firstName = document.querySelector('#ach-firstName').value;
+                                    bankDetails.lastName = document.querySelector('#ach-lastName').value;
+                                } else {
+                                    bankDetails.businessName = document.querySelector('#business-name').value;
                                 }
 
-                                // Submit tokenizedPayload.nonce to your server as you would
-                                // other payment method nonces.
-                                console.log('tokenizedPayload:', tokenizedPayload);
-                                sendBraintreeNonce(tokenizedPayload.nonce);
+                                // Use the usBankAccountInstance here.
+                                usBankAccountInstance.tokenize({
+                                    bankDetails: bankDetails,
+                                    mandateText: 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.'
+                                }, function (tokenizeErr, tokenizedPayload) {
+                                    if (tokenizeErr) {
+                                        //console.error('tokenizedPayload:', tokenizedPayload);
+                                        fireBraintreeError(tokenizeErr);
+                                        return false;
+                                    }
+
+                                    // Submit tokenizedPayload.nonce to your server as you would
+                                    // other payment method nonces.
+                                    console.log('tokenizedPayload:', tokenizedPayload);
+                                    sendBraintreeNonce(tokenizedPayload.nonce);
+                                });
                             });
                         });
-                    });
+                    }
 
                     //threeDSecure
                     braintree.threeDSecure.create({
@@ -493,7 +514,7 @@
 
                                 if (payload.type === 'CreditCard') {
                                     threeDSecure.verifyCard({
-                                        amount: {{ amount|json_encode|raw }},
+                                        amount: getBTAmount(),
                                         nonce: payload.nonce,
                                         onLookupComplete: function (result, callback) {
                                             //console.log('result: ', result);
