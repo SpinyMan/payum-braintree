@@ -1,10 +1,10 @@
 <?php
 namespace Payum\Braintree\Action\Api;
 
-use Payum\Core\Request\Refund;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Braintree\Request\Api\DoSale;
+use Payum\Core\Request\Refund;
 
 class DoRefundAction extends BaseApiAwareAction
 {
@@ -22,7 +22,7 @@ class DoRefundAction extends BaseApiAwareAction
 
         $transactionResult = $this->api->refund($requestParams);
 
-        $request->setResponse($transactionResult);
+        $request->setModel($transactionResult);
     }
 
     private function getRefundRequestParams($request)
