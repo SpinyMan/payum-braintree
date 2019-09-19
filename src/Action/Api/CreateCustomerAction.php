@@ -2,7 +2,6 @@
 namespace Payum\Braintree\Action\Api;
 
 use Payum\Braintree\Request\Api\CreateCustomer;
-use Payum\Braintree\Request\Api\DoRefund;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Braintree\Request\Api\DoSale;
