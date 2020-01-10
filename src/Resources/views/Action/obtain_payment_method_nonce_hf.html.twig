@@ -7,14 +7,14 @@
             <div data-braintree-id="choose-a-way-to-pay" class="braintree-heading">Choose a way to pay</div>
             <div class="panel-group" id="braintree-accordion" role="tablist" aria-multiselectable="true">
                 <div class="panel panel-default">
-                    <div class="panel-heading" role="tab" id="headingOne">
-                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#pbt-creadit-card" aria-expanded="true" aria-controls="creadit-card">
+                    <div id="pbt-creadit-card-container" class="panel-heading" role="tab">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-creadit-card" aria-expanded="true" aria-controls="creadit-card">
                             <input type="radio" name="braintree-payment-type" value="creditCard" style="display: none">
                             <i class="fa fa-credit-card"></i>
                             Card
                         </label>
                     </div>
-                    <div id="pbt-creadit-card" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+                    <div id="pbt-creadit-card" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-creadit-card-container">
                         <div class="panel-body">
                             <div class="bootstrap-basic">
                                 <form id="braintree-hosted-fields-form" class="needs-validation" novalidate="">
@@ -60,26 +60,26 @@
                     </div>
 
                     <div id="pbt-paypal-container" class="panel-heading" role="tab" style="display: none">
-                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#pbt-paypal" aria-expanded="true" aria-controls="paypal">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-paypal" aria-expanded="true" aria-controls="paypal">
                             <input type="radio" name="braintree-payment-type" value="PayPalAccount" style="display: none">
                             <i class="fa fa-paypal"></i>
                             Paypal
                         </label>
                     </div>
-                    <div id="pbt-paypal" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pbt-paypal-container">
+                    <div id="pbt-paypal" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-paypal-container">
                         <div class="panel-body">
                             <div id="paypal-button"></div>
                         </div>
                     </div>
 
                     <div id="pbt-ach-direct-container" class="panel-heading" role="tab" style="display: none">
-                        <label class="panel-title collapsed" data-toggle="collapse" data-parent="#braintree-accordion" data-target="#pbt-ach-direct" aria-expanded="true" aria-controls="ach-direct">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-ach-direct" aria-expanded="true" aria-controls="ach-direct">
                             <input type="radio" name="braintree-payment-type" value="UsBankAccount" style="display: none">
                             <i class="fa fa-ach"></i>
                             ACH Direct
                         </label>
                     </div>
-                    <div id="pbt-ach-direct" class="panel-collapse collapse" role="tabpanel" aria-labelledby="pbt-ach-direct-container">
+                    <div id="pbt-ach-direct" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-ach-direct-container">
                         <div id="ach-direct-container" class="panel-body">
                             <div class="form-group">
                                 <label for="ach-routingNumber">Routing Number</label>
