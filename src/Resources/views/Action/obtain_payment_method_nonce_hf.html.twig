@@ -194,7 +194,7 @@
                 };
                 document.dispatchEvent(billingEvent);
 
-                if (billingEvent.address.countryName !== 'United States of America') {
+                if (['United States of America', 'USA'].indexOf(billingEvent.address.countryName) === -1) {
                     ACHEnabled = false;
                     braintreeAchDirect.innerHTML = 'Not available for your country';
                 }
