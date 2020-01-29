@@ -1,8 +1,8 @@
 <?php
 namespace Payum\Braintree\Action\Api;
 
-use App\Modules\Payment\Models\SyncDTO;
 use Braintree\Transaction;
+use Braintree\TransactionSearch;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Model\ArrayObject;
 use Payum\Core\Request\Sync;
@@ -20,14 +20,22 @@ class DoSyncAction extends BaseApiAwareAction
 
         $model = $request->getModel();
         $sale = $model->offsetGet('sale');
-        $transactionId = array_get($sale, 'transaction.id');
-        $requestParams = [
-            \Braintree\TransactionSearch::id()->is($transactionId)
-        ];
+        $transaction = $sale['transaction'] ?? ['id' => null];
+        if ($transaction instanceof Transaction) {
+            $transactionId = $transaction->id;
+        } else {
+            $transactionId = $transaction['id'];
+        }
 
-        $transactionResult = $this->api->search($requestParams);
+        if ($transactionId) {
+            $requestParams = [
+                TransactionSearch::id()->is($transactionId)
+            ];
 
-        $request->setModel($transactionResult->firstItem());
+            $transactionResult = $this->api->search($requestParams);
+
+            $request->setModel($transactionResult->firstItem());
+        }
     }
 
     /**

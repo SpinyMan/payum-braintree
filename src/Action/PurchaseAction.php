@@ -171,13 +171,10 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
     {
         $sale = $details->offsetGet('sale');
 
-        if (array_get($sale, 'success')) {
-
+        if (isset($sale['success']) && $sale['success']) {
             switch($sale['transaction']['status']) {
-
                 case Transaction::AUTHORIZED:
                 case Transaction::AUTHORIZING:
-
                     $details->offsetSet('status', 'authorized');
                     break;
 
@@ -186,7 +183,6 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 case Transaction::SETTLED:
                 case Transaction::SETTLEMENT_PENDING:
                 case Transaction::SETTLEMENT_CONFIRMED:
-
                     $details->offsetSet('status', 'captured');
                     break;
             }
