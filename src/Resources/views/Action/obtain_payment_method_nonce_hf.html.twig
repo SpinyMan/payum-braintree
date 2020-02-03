@@ -498,7 +498,7 @@
                             cardBrandButton.disabled = true;
 
                             hostedFieldsInstance.tokenize({
-                                cardholderName: document.querySelector('#cc-name')
+                                cardholderName: document.querySelector('#cc-name').value
                             }, function(tokenizeErr, payload) {
                                 if (tokenizeErr) {
                                     fireBraintreeError(tokenizeErr);
