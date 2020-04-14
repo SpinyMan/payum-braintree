@@ -2,7 +2,6 @@
 namespace Payum\Braintree\Action\Api;
 
 use Payum\Braintree\Request\Api\CreateCustomer;
-use Payum\Braintree\Request\Api\DoRefund;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Braintree\Request\Api\DoSale;
@@ -28,6 +27,23 @@ class CreateCustomerAction extends BaseApiAwareAction
 
         $requestParams = $this->getRequestParams($request);
 
+        if (array_key_exists('customerId', $requestParams)) {
+            $customerId = $requestParams['customerId'];
+            unset($requestParams['customerId']);
+            if ($customerId) {
+                try {
+                    $transactionResult = $this->api->updateCustomer($customerId, $requestParams + [
+                            'options' => [
+                                'updateExisting' => true
+                            ]
+                        ]);
+                    $request->setResponse($transactionResult);
+                    return;
+                } catch (\Exception $e) {
+                }
+            }
+        }
+
         $transactionResult = $this->api->createCustomer($requestParams);
 
         $request->setResponse($transactionResult);
@@ -42,7 +58,7 @@ class CreateCustomerAction extends BaseApiAwareAction
         }
 
         $params = [];
-        foreach (['paymentMethodNonce', 'firstName', 'lastName', 'email', 'phone'] as $key)  {
+        foreach (['paymentMethodNonce', 'customerId', 'firstName', 'lastName', 'email', 'phone', 'creditCard'] as $key)  {
             if (! $details->offsetExists($key)) continue;
 
             $params[$key] = $details->offsetGet($key);

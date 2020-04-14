@@ -1,0 +1,565 @@
+{% extends layout ?: "@PayumCore/layout.html.twig" %}
+
+{% block payum_body %}
+
+    {% block braintree_payment_form %}
+        <div id="hosted-fields-container">
+            <div data-braintree-id="choose-a-way-to-pay" class="braintree-heading">Choose a way to pay</div>
+            <div class="panel-group" id="braintree-accordion" role="tablist" aria-multiselectable="true">
+                <div class="panel panel-default">
+                    <div id="pbt-creadit-card-container" class="panel-heading" role="tab">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-creadit-card" aria-expanded="true" aria-controls="creadit-card">
+                            <input type="radio" name="braintree-payment-type" value="creditCard" style="display: none">
+                            <i class="fa fa-credit-card"></i>
+                            Card
+                        </label>
+                    </div>
+                    <div id="pbt-creadit-card" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-creadit-card-container">
+                        <div class="panel-body">
+                            <div class="bootstrap-basic">
+                                <form id="braintree-hosted-fields-form" class="needs-validation" novalidate="">
+                                    <div class="form-group">
+                                        <label for="cc-name">Name on card</label>
+                                        <input type="text" id="cc-name" class="form-control">
+                                        <small class="text-muted">Full name as displayed on card</small>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cc-number">Credit card number</label>
+                                        <div class="form-control" id="cc-number"></div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                <label for="cc-expiration">Expiration</label>
+                                                <div class="form-control" id="cc-expiration"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6 mb-3">
+                                            <div class="form-group">
+                                                <label id="for-cc-cvv" for="cc-cvv">CVV</label>
+                                                <div class="form-control" id="cc-cvv"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="cc-postal-code">Postal code</label>
+                                        <div class="form-control" id="cc-postal-code"></div>
+                                    </div>
+
+                                    <hr class="mb-4">
+
+                                    <div class="text-center">
+                                        <button id="card-brand-button" class="btn btn-primary btn-lg" type="submit" disabled="disabled">Pay with <span id="card-brand">Card</span></button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pbt-paypal-container" class="panel-heading" role="tab" style="display: none">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-paypal" aria-expanded="true" aria-controls="paypal">
+                            <input type="radio" name="braintree-payment-type" value="PayPalAccount" style="display: none">
+                            <i class="fa fa-paypal"></i>
+                            Paypal
+                        </label>
+                    </div>
+                    <div id="pbt-paypal" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-paypal-container">
+                        <div class="panel-body">
+                            <div id="paypal-button"></div>
+                        </div>
+                    </div>
+
+                    <div id="pbt-ach-direct-container" class="panel-heading" role="tab" style="display: none">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-ach-direct" aria-expanded="true" aria-controls="ach-direct">
+                            <input type="radio" name="braintree-payment-type" value="UsBankAccount" style="display: none">
+                            <i class="fa fa-ach"></i>
+                            ACH Direct
+                        </label>
+                    </div>
+                    <div id="pbt-ach-direct" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-ach-direct-container">
+                        <div id="ach-direct-container" class="panel-body">
+                            <div class="form-group">
+                                <label for="ach-routingNumber">Routing Number</label>
+                                <input type="text" id="ach-routingNumber" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-accountNumber">Account Number</label>
+                                <input type="text" id="ach-accountNumber" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-accountType">Account Type</label>
+                                <select class="form-control" id="ach-accountType">
+                                    <option value="checking">Checking</option>
+                                    <option value="savings">Savings</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ach-ownershipType">Ownership Type</label>
+                                <select class="form-control" id="ach-ownershipType">
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+                            <div class="form-group ach-ownershipType personal">
+                                <label for="ach-firstName">First Name</label>
+                                <input type="text" id="ach-firstName" class="form-control">
+                            </div>
+                            <div class="form-group ach-ownershipType personal">
+                                <label for="ach-lastName">Last Name</label>
+                                <input type="text" id="ach-lastName" class="form-control">
+                            </div>
+                            <div class="form-group ach-ownershipType business" style="display: none">
+                                <label for="ach-businessName">Business Name</label>
+                                <input type="text" id="ach-businessName" class="form-control">
+                            </div>
+                            <div class="form-group" style="display: none">
+                                <label for="ach-billingAddress">Billing Address</label>
+                                <input type="text" id="ach-billingAddress" class="form-control">
+                            </div>
+
+                            <button id="bank-login-button" class="btn btn-primary">Checkout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form method="POST" action="{{ formAction }}" id="braintree-payment-form" style="display: none">
+            <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
+            <input type="hidden" name="amount" id="braintree_payment_amount" value="{{ amount|json_encode|raw }}" />
+            <input type="submit" id="braintree-payment-submit" />
+        </form>
+    {% endblock %}
+
+    {% block braintree_init_js %}
+
+        <script type="text/javascript">
+            const braintreePaymentSubmit = document.querySelector('#braintree-payment-submit'),
+                braintreeAchDirect = document.querySelector('#ach-direct-container'),
+                cardBrandButton = document.querySelector('#card-brand-button'),
+                braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form'),
+                htmlHead = document.getElementsByTagName('head')[0],
+                braintreePaymentAmount = document.querySelector('#braintree_payment_amount');
+            var threeDSecure,
+                ACHEnabled = true;
+
+            const btScriptSrc = [
+                'https://www.paypalobjects.com/api/checkout',
+                'hosted-fields',
+                'three-d-secure',
+                'paypal-checkout',
+                'us-bank-account',
+                'client',
+            ];
+            const billingEvent = new Event('braintree.billing-address');
+
+            prefillBTBillingAddress();
+            loadBTScripts();
+
+            function loadBTScripts() {
+                loadBTScript(0);
+            }
+
+            function loadBTScript(i) {
+                if (typeof btScriptSrc[i] === 'undefined') {
+                    setupBTForm();
+                    return;
+                }
+                var btId = 'bt-'+btScriptSrc[i];
+                if (document.getElementById(btId) === null) {
+                    var s = document.createElement('script');
+                    s.id = btId;
+                    s.async = true;
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.60.0/js/') + btScriptSrc[i] + '.min.js';
+                    s.onload = function () {
+                        loadBTScript(i + 1);
+                    };
+                    htmlHead.appendChild(s);
+                } else {
+                    loadBTScript(i + 1);
+                }
+            }
+
+            function prefillBTBillingAddress() {
+                billingEvent.address = {
+                    countryName: '',
+                    firstName: '',
+                    lastName: '',
+                    locality: '',
+                    postalCode: '',
+                    region: '',
+                    streetAddress: ''
+                };
+                document.dispatchEvent(billingEvent);
+
+                if (['United States of America', 'USA'].indexOf(billingEvent.address.countryName) === -1) {
+                    ACHEnabled = false;
+                    braintreeAchDirect.innerHTML = 'Not available for your country';
+                }
+            }
+
+            function getBTAmount() {
+                return parseFloat(braintreePaymentAmount.value).toFixed(2);
+            }
+
+            function setupBTForm() {
+                braintree.client.create({
+                    authorization: {{ clientToken|json_encode|raw }},
+                }, function(err, clientInstance) {
+                    if (err) {
+                        //console.error(err);
+                        fireBraintreeError(err);
+                        return;
+                    }
+
+                    var ccName = document.getElementById('cc-name');
+
+                    // Create a PayPal Checkout component.
+                    braintree.paypalCheckout.create({
+                        client: clientInstance
+                    }, function (paypalCheckoutErr, paypalCheckoutInstance) {
+
+                        // Stop if there was a problem creating PayPal Checkout.
+                        // This could happen if there was a network error or if it's incorrectly
+                        // configured.
+                        if (paypalCheckoutErr) {
+                            //console.error('paypalCheckoutErr:', paypalCheckoutErr);
+                            //fireBraintreeError(paypalCheckoutErr);
+                            return;
+                        }
+
+                        document.getElementById('pbt-paypal-container').style.display = 'block';
+                        // Set up PayPal with the checkout.js library
+                        paypal.Button.render({
+                            env: '{{ env }}', //'sandbox', // or 'production'
+
+                            payment: function () {
+                                return paypalCheckoutInstance.createPayment({
+                                    // Your PayPal options here. For available options, see
+                                    // http://braintree.github.io/braintree-web/current/PayPalCheckout.html#createPayment
+                                    flow: 'vault',
+                                    intent: 'sale',
+                                    amount: getBTAmount(),
+                                    currency: '{{ currency|json_encode|raw }}',
+                                    //billingAgreementDescription: 'Your agreement description',
+                                });
+                            },
+
+                            onAuthorize: function (data, actions) {
+                                return paypalCheckoutInstance.tokenizePayment(data, function (onAuthorizeErr, onAuthorizePayload) {
+                                    if (onAuthorizeErr) {
+                                        // console.log('onAuthorizeErr:', onAuthorizeErr);
+                                        fireBraintreeError(onAuthorizeErr);
+                                        return false;
+                                    }
+                                    // console.log('onAuthorizePayload:', onAuthorizePayload);
+                                    // Submit `payload.nonce` to your server.
+                                    sendBraintreeNonce(onAuthorizePayload.nonce);
+                                });
+                            },
+
+                            onCancel: function (data) {
+                                // console.log('checkout.js payment cancelled', JSON.stringify(data, 0, 2));
+                            },
+
+                            onError: function (err) {
+                                console.error('checkout.js error', err);
+                            }
+                        }, '#paypal-button');
+                    });
+
+                    //ACH
+                    if (ACHEnabled) {
+                        braintree.usBankAccount.create({
+                            client: clientInstance
+                        }, function (usBankAccountErr, usBankAccountInstance) {
+                            if (usBankAccountErr) {
+                                //console.error('usBankAccountErr:', usBankAccountErr);
+                                //fireBraintreeError(usBankAccountErr);
+                                throw usBankAccountErr;
+                            }
+
+                            document.getElementById('pbt-ach-direct-container').style.display = 'block';
+                            document.dispatchEvent(new Event('braintree.usBankAccount.created'));
+
+                            document.querySelector('#ach-ownershipType').addEventListener('change', function (e) {
+                                let aot = document.querySelectorAll('.ach-ownershipType');
+                                for (let i of aot) {
+                                    i.style.display = 'none';
+                                }
+                                aot = document.querySelectorAll('.ach-ownershipType.' + e.target.value);
+                                for (let i of aot) {
+                                    i.style.display = 'block';
+                                }
+                            });
+
+                            document.getElementById('bank-login-button').addEventListener('click', function (e) {
+                                e.preventDefault();
+
+                                var bankDetails = {
+                                    routingNumber: document.querySelector('#ach-routingNumber').value,
+                                    accountNumber: document.querySelector('#ach-accountNumber').value,
+                                    accountType: document.querySelector('#ach-accountType').value,
+                                    ownershipType: document.querySelector('#ach-ownershipType').value,
+                                    billingAddress: {
+                                        streetAddress: billingEvent.address.streetAddress,
+                                        locality: billingEvent.address.locality,
+                                        region: billingEvent.address.region,
+                                        postalCode: billingEvent.address.postalCode
+                                    }
+                                };
+
+                                if (bankDetails.ownershipType === 'personal') {
+                                    bankDetails.firstName = document.querySelector('#ach-firstName').value;
+                                    bankDetails.lastName = document.querySelector('#ach-lastName').value;
+                                } else {
+                                    bankDetails.businessName = document.querySelector('#business-name').value;
+                                }
+
+                                // Use the usBankAccountInstance here.
+                                usBankAccountInstance.tokenize({
+                                    bankDetails: bankDetails,
+                                    mandateText: 'By clicking ["Checkout"], I authorize Braintree, a service of PayPal, on behalf of [your business name here] (i) to verify my bank account information using bank information and consumer reports and (ii) to debit my bank account.'
+                                }, function (tokenizeErr, tokenizedPayload) {
+                                    if (tokenizeErr) {
+                                        //console.error('tokenizedPayload:', tokenizedPayload);
+                                        fireBraintreeError(tokenizeErr);
+                                        return false;
+                                    }
+
+                                    // Submit tokenizedPayload.nonce to your server as you would
+                                    // other payment method nonces.
+                                    // console.log('tokenizedPayload:', tokenizedPayload);
+                                    sendBraintreeNonce(tokenizedPayload.nonce);
+                                });
+                            });
+                        });
+                    }
+
+                    //threeDSecure
+                    braintree.threeDSecure.create({
+                        client: clientInstance,
+                        version: 2
+                    }, function (threeDSecureErr, threeDSecureInstance) {
+                        if (threeDSecureErr) {
+                            // console.log('threeDSecureErr:', threeDSecureErr);
+                            fireBraintreeError(threeDSecureErr);
+                            return;
+                        }
+
+                        threeDSecure = threeDSecureInstance;
+                    });
+
+                    braintree.hostedFields.create({
+                        client: clientInstance,
+                        styles: {
+                            input: {
+                                // change input styles to match
+                                // bootstrap styles
+                                'font-size': '1rem',
+                                color: '#495057'
+                            },
+                            'input::placeholder': {
+                                color: '#ccc'
+                            },
+                            '.valid': {
+                                'color': 'green'
+                            },
+                            '.invalid': {
+                                'color': 'red'
+                            },
+                        },
+                        fields: {
+                            number: {
+                                selector: '#cc-number',
+                                placeholder: '0000 0000 0000 0000'
+                            },
+                            cvv: {
+                                selector: '#cc-cvv',
+                                type: 'password'
+                            },
+                            expirationDate: {
+                                selector: '#cc-expiration',
+                                placeholder: 'MM / YY'
+                            },
+                            postalCode: {
+                                selector: '#cc-postal-code',
+                                placeholder: '12345'
+                            }
+                        }
+                    }, function (hostedFieldsErr, hostedFieldsInstance) {
+                        if (hostedFieldsErr) {
+                            //console.error('hostedFieldsError:', hostedFieldsErr);
+                            fireBraintreeError(hostedFieldsErr);
+                            return;
+                        }
+
+                        document.dispatchEvent(new Event('braintree.hosted-fields.created'));
+
+                        function createInputChangeEventListener(element) {
+                            return function () {
+                                validateInput(element);
+                            }
+                        }
+
+                        function setValidityClasses(element, validity) {
+                            element.classList[validity ? 'add' : 'remove']('is-valid');
+                            element.classList[validity ? 'remove' : 'add']('is-invalid');
+                        }
+
+                        function validateInput(element) {
+                            // very basic validation, if the fields are empty, mark them as invalid, if not, mark them as valid
+                            if (element.value === '') {
+                                setValidityClasses(element, false);
+                                return false;
+                            }
+
+                            setValidityClasses(element, true);
+                            return true;
+                        }
+
+                        ccName.addEventListener('change', function () {
+                            validateInput(ccName);
+                        });
+
+                        hostedFieldsInstance.on('validityChange', function (e) {
+                            var field = e.fields[e.emittedBy];
+
+                            // Remove any previously applied error or warning classes
+                            field.container.classList.remove('is-valid');
+                            field.container.classList.remove('is-invalid');
+
+                            if (field.isValid) {
+                                field.container.classList.add('is-valid');
+                            } else if (field.isPotentiallyValid) {
+                                // skip adding classes if the field is
+                                // not valid, but is potentially valid
+                            } else {
+                                field.container.classList.add('is-invalid');
+                            }
+
+                            //e.fields.name = {isValid: validateInput(ccName)};
+                            var fields = Object.keys(e.fields);
+                            for (var field of fields) {
+                                if (! e.fields[field].isValid) {
+                                    cardBrandButton.disabled = true;
+                                    return;
+                                }
+                            }
+                            cardBrandButton.disabled = false;
+                        });
+
+                        hostedFieldsInstance.on('cardTypeChange', function (e) {
+                            var cardBrand = document.querySelector('#card-brand'),
+                                cvvLabel = document.querySelector('#for-cc-cvv');
+
+                            if (e.cards.length === 1) {
+                                var card = e.cards[0];
+
+                                cardBrand.textContent =card.niceType;
+                                // update the security code label
+                                cvvLabel.textContent = card.code.name;
+                            } else {
+                                // reset to defaults
+                                cardBrand.textContent = 'Card';
+                                cvvLabel.textContent = 'CVV';
+                            }
+                        });
+
+                        braintreeHostedFieldsForm.addEventListener('submit', function (e) {
+                            e.preventDefault();
+
+                            var formIsInvalid = false,
+                                state = hostedFieldsInstance.getState();
+
+                            // perform validations on the non-Hosted Fields
+                            // inputs
+                            if (!validateInput(ccName)) {
+                                formIsInvalid = true;
+                            }
+
+                            // Loop through the Hosted Fields and check
+                            // for validity, apply the is-invalid class
+                            // to the field container if invalid
+                            Object.keys(state.fields).forEach(function (field) {
+                                if (!state.fields[field].isValid) {
+                                    state.fields[field].container.classList.add('is-invalid');
+                                    formIsInvalid = true;
+                                }
+                            });
+
+                            if (formIsInvalid) {
+                                // skip tokenization request if any fields are invalid
+                                return;
+                            }
+
+                            cardBrandButton.disabled = true;
+
+                            hostedFieldsInstance.tokenize({
+                                cardholderName: document.querySelector('#cc-name').value
+                            }, function(tokenizeErr, payload) {
+                                if (tokenizeErr) {
+                                    fireBraintreeError(tokenizeErr);
+                                    return;
+                                }
+
+                                // console.log('payload:', payload);
+
+                                // This is where you would submit payload.nonce to your server
+
+                                // you can either send the form values with the payment
+                                // method nonce via an ajax request to your server,
+                                // or add the payment method nonce to a hidden inpiut
+                                // on your form and submit the form programatically
+
+                                if (payload.type === 'CreditCard') {
+                                    threeDSecure.verifyCard({
+                                        amount: getBTAmount(),
+                                        nonce: payload.nonce,
+                                        onLookupComplete: function (result, callback) {
+                                            // console.log('result: ', result);
+                                            callback();
+                                        },
+                                        onUserClose: function () {}
+                                    }, function (verifyErr, verifyResponse) {
+                                        if (verifyErr) {
+                                            // Handle errors
+                                            if (verifyErr.code === 'THREEDS_AUTHENTICATION_IN_PROGRESS') {
+                                                verifyErr.message += ' You have to reload the page.';
+                                            }
+                                            fireBraintreeError(verifyErr);
+                                            return;
+                                        }
+                                        // 3D Secure finished.
+                                        // Use nonce in response to create transaction. This should be different from the nonce created on your server.
+                                        // console.log('After verify:', verifyResponse);
+
+                                        sendBraintreeNonce(verifyResponse.nonce);
+                                    });
+                                    return false;
+                                }
+                            });
+
+                            return false;
+                        });
+                    });
+                });
+            }
+
+            function sendBraintreeNonce(nonce) {
+                document.querySelector('#payment_method_nonce').value = nonce;
+                braintreePaymentSubmit.click();
+            }
+
+            function fireBraintreeError(err) {
+                // console.log(err);
+                var resultEvent = new Event('braintree.error');
+                resultEvent.exception = err;
+                document.dispatchEvent(resultEvent);
+            }
+        </script>
+    {% endblock %}
+
+{% endblock %}

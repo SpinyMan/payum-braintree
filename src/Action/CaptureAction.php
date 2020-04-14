@@ -7,7 +7,7 @@ use Payum\Core\Action\ActionInterface;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Exception\RequestNotSupportedException;
-use Braintree\Transaction;
+use Payum\Core\Model\ArrayObject;
 use Payum\Core\Model\Identity;
 use Payum\Core\Request\Capture;
 
@@ -30,6 +30,8 @@ class CaptureAction implements ActionInterface, GatewayAwareInterface
      */
     public function supports($request)
     {
-        return $request instanceof Capture && $request->getModel() instanceof Identity;
+        return $request instanceof Capture
+            && ($request->getModel() instanceof Identity
+                || $request->getModel() instanceof ArrayObject);
     }
 }

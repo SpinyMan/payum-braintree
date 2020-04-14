@@ -20,7 +20,6 @@ class FindPaymentMethodNonceAction extends BaseApiAwareAction
         
         try {
             $paymentMethodNonce = $this->api->findPaymentMethodNonce($request->getNonceString());
-
             $request->setResponse($paymentMethodNonce);
         }
         catch(NotFound $exception) {

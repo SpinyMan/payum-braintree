@@ -3,6 +3,7 @@ namespace Payum\Braintree;
 
 use Payum\Braintree\Action\Api\CreateCustomerAction;
 use Payum\Braintree\Action\Api\DoRefundAction;
+use Payum\Braintree\Action\Api\DoSyncAction;
 use Payum\Braintree\Action\CaptureAction;
 use Payum\Braintree\Action\ConvertPaymentAction;
 use Payum\Braintree\Action\ObtainPaymentMethodNonceAction;
@@ -22,12 +23,13 @@ class BraintreeGatewayFactory extends GatewayFactory
      */
     protected function populateConfig(ArrayObject $config)
     {
+        $ui = $config['ui'];
         $config->defaults([
 
             'payum.factory_name' => 'braintree',
             'payum.factory_title' => 'braintree',
 
-            'payum.template.obtain_payment_method_nonce' => '@PayumBraintree/Action/obtain_payment_method_nonce.html.twig',
+            'payum.template.obtain_payment_method_nonce' => "@PayumBraintree/Action/obtain_payment_method_nonce_{$ui}.html.twig",
             'payum.template.obtain_cardholder_authentication' => '@PayumBraintree/Action/obtain_cardholder_authentication.html.twig',
 
             'payum.action.capture' => new CaptureAction(),
@@ -42,7 +44,7 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.action.convert_payment' => new ConvertPaymentAction(),
 
             'payum.action.obtain_payment_method_nonce' => function(ArrayObject $config) {
-                $action = new ObtainPaymentMethodNonceAction($config['payum.template.obtain_payment_method_nonce']);
+                $action = new ObtainPaymentMethodNonceAction($config);
                 $action->setCardholderAuthenticationRequired($config['cardholderAuthenticationRequired']);
 
                 return $action;
@@ -58,6 +60,7 @@ class BraintreeGatewayFactory extends GatewayFactory
             'payum.action.api.find_payment_method_nonce' => new FindPaymentMethodNonceAction(),
             'payum.action.api.do_sale' => new DoSaleAction(),
             'payum.action.api.do_refund' => new DoRefundAction(),
+            'payum.action.api.do_sync' => new DoSyncAction(),
             'payum.action.api.create_customer' => new CreateCustomerAction(),
 
             'cardholderAuthenticationRequired' => true

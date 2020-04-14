@@ -25,7 +25,7 @@ class TransactionArray
             'planId', 'subscriptionId', 'subscription', 'addOns', 'discounts', 'recurring',
             'channel', 'serviceFeeAmount', 'escrowStatus', /*disbursementDetails,*/
             'paymentInstrumentType', 'processorSettlementResponseCode', 
-            'processorSettlementResponseText', 'threeDSecureInfo' /*, creditCardDetails */
+            'processorSettlementResponseText', 'threeDSecureInfo', 'creditCardDetails'
         ]);
 
         return $array;
