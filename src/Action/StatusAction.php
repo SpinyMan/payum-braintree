@@ -3,7 +3,7 @@
 namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
-use ArrayObject;
+use Payum\Core\Model\ArrayObject;
 use Payum\Core\Request\GetStatusInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 

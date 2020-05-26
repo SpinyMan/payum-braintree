@@ -23,7 +23,7 @@ class DoSaleAction extends BaseApiAwareAction
         $request->setResponse($transactionResult);
     }
 
-    private function getSaleRequestParams($request)
+    private function getSaleRequestParams($request): array
     {
         /** @var ArrayObject $details */
         $details = /*ArrayObject::ensureArrayObject*/
@@ -33,7 +33,7 @@ class DoSaleAction extends BaseApiAwareAction
             throw new \Exception('Validation error');
         }
 
-        $requestParams = new ArrayObject();
+        $requestParams = [];
 
         if ($details->offsetExists('paymentMethodNonceInfo')) {
             $paymentMethodNonceInfo = $details->offsetGet('paymentMethodNonceInfo');
@@ -86,8 +86,8 @@ class DoSaleAction extends BaseApiAwareAction
         }
 
         //fix error: Cannot provide both paymentMethodToken and creditCard attributes
-        if ($requestParams->offsetExists('paymentMethodToken') && $requestParams->offsetExists('paymentMethodNonce')) {
-            $requestParams->offsetUnset('paymentMethodNonce');
+        if (array_key_exists('paymentMethodToken', $requestParams) && array_key_exists('paymentMethodNonce', $requestParams)) {
+            unset($requestParams['paymentMethodNonce']);
         }
 
         return $requestParams;

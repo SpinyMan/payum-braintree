@@ -65,37 +65,37 @@ class Api
         return PaymentMethodNonce::find($nonceString);
     }
 
-    public function sale(ArrayObject $params)
+    public function sale(array $params)
     {
-        $options = $params->offsetExists('options') ? $params['options'] : [];
+        $options = $params['options'] ?? [];
 
-        if (null !== $this->options['storeInVault'] && !isset($options['storeInVault'])) {
+        if ($this->options['storeInVault'] !== null && !isset($options['storeInVault'])) {
             $options['storeInVault'] = $this->options['storeInVault'];
         }
 
-        if (null !== $this->options['storeInVaultOnSuccess'] && !isset($options['storeInVaultOnSuccess'])) {
+        if ($this->options['storeInVaultOnSuccess'] !== null && !isset($options['storeInVaultOnSuccess'])) {
             $options['storeInVaultOnSuccess'] = $this->options['storeInVaultOnSuccess'];
         }
 
-        if (null !== $this->options['addBillingAddressToPaymentMethod']
+        if ($this->options['addBillingAddressToPaymentMethod'] !== null
             && !isset($options['addBillingAddressToPaymentMethod'])
-            && $params->offsetExists('billing')) {
+            && array_key_exists('billing', $params)) {
             $options['addBillingAddressToPaymentMethod'] = $this->options['addBillingAddressToPaymentMethod'];
         }
 
-        if (null !== $this->options['storeShippingAddressInVault']
+        if ($this->options['storeShippingAddressInVault'] !== null
             && !isset($options['storeShippingAddressInVault'])
-            && $params->offsetExists('shipping')) {
+            && array_key_exists('shipping', $params)) {
             $options['storeShippingAddressInVault'] = $this->options['storeShippingAddressInVault'];
         }
 
         $params['options'] = $options;
 
-        if (array_key_exists('merchantAccountId', $this->options) && null !== $this->options['merchantAccountId']) {
+        if (array_key_exists('merchantAccountId', $this->options) && $this->options['merchantAccountId'] !== null) {
             $params['merchantAccountId'] = $this->options['merchantAccountId'];
         }
 
-        return Transaction::sale((array) $params);
+        return Transaction::sale($params);
     }
 
     public function refund(ArrayObject $params)
