@@ -4,9 +4,9 @@ namespace Payum\Braintree\Action;
 
 use Payum\Braintree\Request\Purchase;
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
+use Payum\Core\Model\ArrayObject;
 use Payum\Core\Payum;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Exception\RuntimeException;
