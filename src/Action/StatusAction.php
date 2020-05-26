@@ -3,38 +3,31 @@
 namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\Model\Identity;
+use ArrayObject;
 use Payum\Core\Request\GetStatusInterface;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 
 class StatusAction implements ActionInterface
 {
-    /**
-     * {@inheritDoc}
-     *
-     * @param GetStatusInterface $request
-     */
     public function execute($request)
     {
+        /** @param GetStatusInterface $request */
+
         RequestNotSupportedException::assertSupports($this, $request);
 
-        $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
+        /** @var ArrayObject $details */
+        $details = /*ArrayObject::ensureArrayObject*/
+            ($request->getModel());
 
-        $status = $details['status'];
-
-        if (null != $status) {
-
+        if ($details->offsetExists('status')) {
+            $status = $details->offsetGet('status');
             switch ($status) {
-
                 case 'failed':
-
                     $request->markFailed();
 
                     return;
 
                 case 'authorized':
-
                     if ($this->hasSuccessfulTransaction($details)) {
                         $request->markAuthorized();
                     } else {
@@ -44,7 +37,6 @@ class StatusAction implements ActionInterface
                     return;
 
                 case 'captured':
-
                     if ($this->hasSuccessfulTransaction($details)) {
                         $request->markCaptured();
                     } else {
@@ -54,7 +46,6 @@ class StatusAction implements ActionInterface
                     return;
 
                 case 'refunded':
-
                     if ($this->hasSuccessfulTransaction($details)) {
                         $request->markRefunded();
                     } else {
@@ -65,7 +56,7 @@ class StatusAction implements ActionInterface
             }
         }
 
-        if ($details['paymentMethodNonce']) {
+        if ($details->offsetExists('paymentMethodNonce') && $details->offsetGet('paymentMethodNonce')) {
             $request->markPending();
 
             return;
@@ -74,14 +65,11 @@ class StatusAction implements ActionInterface
         $request->markNew();
     }
 
-    protected function hasSuccessfulTransaction($details)
+    protected function hasSuccessfulTransaction(ArrayObject $details): bool
     {
-        return $details['sale'] && $details['sale']['success'];
+        return $details->offsetExists('sale') && $details['sale']['success'];
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports($request)
     {
         return $request instanceof GetStatusInterface && $request->getModel() instanceof \ArrayAccess;

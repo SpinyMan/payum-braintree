@@ -4,8 +4,9 @@ namespace Payum\Braintree\Tests\Action\Api;
 use Payum\Braintree\Action\Api\GenerateClientTokenAction;
 use Payum\Braintree\Request\Api\GenerateClientToken;
 use Payum\Braintree\Api;
+use PHPUnit\Framework\TestCase;
 
-class GenerateClientTokenActionTest extends \PHPUnit_Framework_TestCase
+class GenerateClientTokenActionTest extends TestCase
 {
     /**
      * @test

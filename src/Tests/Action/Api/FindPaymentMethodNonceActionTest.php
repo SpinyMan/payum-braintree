@@ -5,8 +5,9 @@ use Payum\Braintree\Action\Api\FindPaymentMethodNonceAction;
 use Payum\Braintree\Request\Api\FindPaymentMethodNonce;
 use Payum\Braintree\Api;
 use Braintree\PaymentMethodNonce;
+use PHPUnit\Framework\TestCase;
 
-class FindPaymentMethodNonceActionTest extends \PHPUnit_Framework_TestCase
+class FindPaymentMethodNonceActionTest extends TestCase
 {
     /**
      * @test

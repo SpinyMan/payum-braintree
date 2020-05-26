@@ -1,4 +1,5 @@
 <?php
+
 namespace Payum\Braintree\Action\Api;
 
 use Payum\Core\Action\ActionInterface;

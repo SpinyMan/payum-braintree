@@ -1,4 +1,5 @@
 <?php
+
 namespace Payum\Braintree\Request;
 
 interface RequestInterface

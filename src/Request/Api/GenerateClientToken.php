@@ -1,4 +1,5 @@
 <?php
+
 namespace Payum\Braintree\Request\Api;
 
 class GenerateClientToken
@@ -13,17 +14,17 @@ class GenerateClientToken
     {
         return $this->customerId;
     }
-    
+
     public function setCustomerId($value)
     {
         $this->customerId = $value;
     }
-    
+
     public function getMerchantAccountId()
     {
         return $this->merchantAccountId;
     }
-    
+
     public function setMerchantAccountId($value)
     {
         $this->merchantAccountId = $value;
@@ -33,7 +34,7 @@ class GenerateClientToken
     {
         return $this->response;
     }
-    
+
     public function setResponse($value)
     {
         $this->response = $value;

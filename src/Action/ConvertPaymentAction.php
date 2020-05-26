@@ -1,25 +1,19 @@
 <?php
+
 namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Model\PaymentInterface;
 use Payum\Core\Request\Convert;
 use Payum\Core\Request\GetCurrency;
-use Payum\Core\Security\SensitiveValue;
 
 class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param Convert $request
-     */
     public function execute($request)
     {
         RequestNotSupportedException::assertSupports($this, $request);
@@ -27,7 +21,8 @@ class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
         /** @var PaymentInterface $payment */
         $payment = $request->getSource();
 
-        $details = /*ArrayObject::ensureArrayObject*/($payment->getDetails());
+        $details = /*ArrayObject::ensureArrayObject*/
+            ($payment->getDetails());
 
         $this->gateway->execute($currency = new GetCurrency($payment->getCurrencyCode()));
 
@@ -38,15 +33,8 @@ class ConvertPaymentAction implements ActionInterface, GatewayAwareInterface
         $request->setResult((array) $details);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports($request)
     {
-        return
-            $request instanceof Convert &&
-            $request->getSource() instanceof PaymentInterface &&
-            $request->getTo() == 'array'
-        ;
+        return $request instanceof Convert && $request->getSource() instanceof PaymentInterface && $request->getTo() === 'array';
     }
 }

@@ -6,8 +6,9 @@ use Payum\Braintree\Request\Api\DoSale;
 use Payum\Braintree\Api;
 use Braintree\Transaction;
 use Braintree\Result;
+use PHPUnit\Framework\TestCase;
 
-class DoSaleActionTest extends \PHPUnit_Framework_TestCase
+class DoSaleActionTest extends TestCase
 {
     /**
      * @test

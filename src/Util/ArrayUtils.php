@@ -1,11 +1,12 @@
 <?php
+
 namespace Payum\Braintree\Util;
 
 class ArrayUtils
 {
-    public static function extractPropertiesToArray($object, $properties)
+    public static function extractPropertiesToArray($object, $properties): array
     {
-        $array = array();
+        $array = [];
 
         foreach ($properties as $propertyName) {
             if (isset($object->{$propertyName})) {

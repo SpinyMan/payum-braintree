@@ -11,8 +11,9 @@ use Payum\Core\GatewayAwareInterface;
 use Payum\Braintree\Action\ObtainCardholderAuthenticationAction;
 use Payum\Braintree\Request\ObtainCardholderAuthentication;
 use Payum\Braintree\Request\Api\GenerateClientToken;
+use PHPUnit\Framework\TestCase;
 
-class ObtainCardholderAuthenticationActionTest extends \PHPUnit_Framework_TestCase
+class ObtainCardholderAuthenticationActionTest extends TestCase
 {
     protected $action;
 
@@ -48,26 +49,6 @@ class ObtainCardholderAuthenticationActionTest extends \PHPUnit_Framework_TestCa
             array(new ObtainCardholderAuthentication(new \stdClass())),
             array($this->getMockForAbstractClass(Generic::class, array(array()))),
         );
-    }
-
-    /**
-     * @test
-     *
-     * @dataProvider provideSupportedRequests
-     */
-    public function shouldSupportRequest($request)
-    {
-        $this->assertTrue($this->action->supports($request));
-    }
-
-    /**
-     * @test
-     *
-     * @dataProvider provideNotSupportedRequests
-     */
-    public function shouldNotSupportRequest($request)
-    {
-        $this->assertFalse($this->action->supports($request));
     }
 
     /**

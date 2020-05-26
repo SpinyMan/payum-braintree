@@ -2,16 +2,16 @@
 
 namespace Payum\Braintree\Action;
 
-use Payum\Braintree\Request\Api\CreateCustomer;
 use Payum\Braintree\Request\Purchase;
 use Payum\Core\Action\ActionInterface;
-use Payum\Core\Model\ArrayObject;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\GatewayAwareInterface;
 use Payum\Core\GatewayAwareTrait;
-use Payum\Core\Request\Authorize;
+use Payum\Core\Payum;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\Exception\RuntimeException;
 use Payum\Braintree\Request\ObtainPaymentMethodNonce;
+
 //use Payum\Braintree\Request\ObtainCardholderAuthentication;
 use Payum\Braintree\Request\Api\FindPaymentMethodNonce;
 use Payum\Braintree\Request\Api\DoSale;
@@ -35,17 +35,13 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $this->cardholderAuthenticationRequired = $value;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param Authorize $request
-     */
     public function execute($request)
     {
         RequestNotSupportedException::assertSupports($this, $request);
 
         /** @var ArrayObject $details */
-        $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
+        $details = /*ArrayObject::ensureArrayObject*/
+            ($request->getModel());
 
         if ($details->offsetExists('status')) {
             return;
@@ -54,33 +50,23 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         try {
             $this->obtainPaymentMethodNonce($details);
 
-            /*if (! $details->offsetExists('customer')) {
-                $this->createCustomer($details);
-                $details->offsetUnset('creditCard');
-            }*/
+            //$this->obtainCardholderAuthentication($details);
+            $this->doSaleTransaction($details);
+            $this->resolveStatus($details);
 
-            if (! $details->offsetExists('pre-authorized') || ! $details->offsetGet('pre-authorized')) {
-                //$this->obtainCardholderAuthentication($details);
-                $this->doSaleTransaction($details);
-                $this->resolveStatus($details);
-
-                $nonceExists = (
-                        $details->offsetExists('paymentMethodNonce') && $details->offsetExists('paymentMethodNonceInfo')
-                    ) || $details->offsetExists('customerId');
-                if (! $nonceExists
-                    || ! $details->offsetExists('sale')
-                    || ! $details->offsetExists('status')) {
-                    throw new \Exception('Validation error');
-                }
+            $nonceExists = ($details->offsetExists('paymentMethodNonce') && $details->offsetExists('paymentMethodNonceInfo')) || $details->offsetExists('customerId');
+            if (!$nonceExists
+                || !$details->offsetExists('sale')
+                || !$details->offsetExists('status')) {
+                throw new \RuntimeException('Validation error');
             }
-        }
-        catch(RuntimeException $exception) {
-            $details['status'] = 'failed';
-            $details['status_reason'] = $exception->getMessage();
+        } catch (RuntimeException $exception) {
+            $details->offsetSet('status', 'failed');
+            $details->offsetSet('status_reason', $exception->getMessage());
         }
 
         //update storage
-        /** @var \Payum\Core\Payum $payum */
+        /** @var Payum $payum */
         $payum = app('payum');
         $payum->getStorage($details)->update($details);
     }
@@ -128,7 +114,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
 
         $paymentMethodInfo = $request->getResponse();
 
-        if (null === $paymentMethodInfo) {
+        if ($paymentMethodInfo === null) {
             throw new RuntimeException('payment_method_nonce not found');
         }
 
@@ -141,17 +127,22 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
             return;
         }
 
-        $saleOptions = [
-            'submitForSettlement' => true
-        ];
+        $saleOptions = [];
 
-        if ($details->offsetExists('paymentMethodNonce') && ! $details->offsetExists('pre-authorized')) {
+        if (!$this->isPreAuthorized($details)) {
+            $saleOptions['submitForSettlement'] = true;
+        }
+
+        if ($details->offsetExists('paymentMethodNonce') /*&& !$this->isPreAuthorized($details)*/) {
             $saleOptions['threeDSecure'] = [
-                'required' => $this->cardholderAuthenticationRequired
+                'required' => $this->cardholderAuthenticationRequired,
             ];
         }
 
-        $details['saleOptions'] = $saleOptions;
+        if ($saleOptions) {
+            $details->offsetSet('saleOptions', $saleOptions);
+        }
+
         /** @see https://developers.braintreepayments.com/reference/request/transaction/sale/php */
         $this->gateway->execute($request = new DoSale($details));
         $transaction = $request->getResponse();
@@ -172,7 +163,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $sale = $details->offsetGet('sale');
 
         if (isset($sale['success']) && $sale['success']) {
-            switch($sale['transaction']['status']) {
+            switch ($sale['transaction']['status']) {
                 case Transaction::AUTHORIZED:
                 case Transaction::AUTHORIZING:
                     $details->offsetSet('status', 'authorized');
@@ -186,15 +177,16 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                     $details->offsetSet('status', 'captured');
                     break;
             }
-        }
-        else {
+        } else {
             $details->offsetSet('status', 'failed');
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    protected function isPreAuthorized(ArrayObject $details): bool
+    {
+        return $details->offsetExists('pre-authorized') && $details->offsetGet('pre-authorized');
+    }
+
     public function supports($request)
     {
         return $request instanceof Purchase && $request->getModel() instanceof \ArrayAccess;

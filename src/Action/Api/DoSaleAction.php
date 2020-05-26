@@ -1,23 +1,19 @@
 <?php
+
 namespace Payum\Braintree\Action\Api;
 
 use Braintree\Customer;
-use Braintree\PaymentMethod;
 use Braintree\Result\Successful;
+use Braintree\Result\UsBankAccountVerification;
 use Payum\Core\Exception\RequestNotSupportedException;
-use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Model\ArrayObject;
 use Payum\Braintree\Request\Api\DoSale;
 
 class DoSaleAction extends BaseApiAwareAction
 {
-    /**
-     * {@inheritDoc}
-     *
-     * @throws \Payum\Core\Exception\LogicException if the token not set in the instruction.
-     */
     public function execute($request)
     {
-        /** @var $request DoSale */
+        /** @var DoSale $request */
         RequestNotSupportedException::assertSupports($this, $request);
 
         $requestParams = $this->getSaleRequestParams($request);
@@ -29,37 +25,42 @@ class DoSaleAction extends BaseApiAwareAction
 
     private function getSaleRequestParams($request)
     {
-        /** @var \Payum\Core\Model\ArrayObject $details */
-        $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
+        /** @var ArrayObject $details */
+        $details = /*ArrayObject::ensureArrayObject*/
+            ($request->getModel());
 
-        if ( ! $details->offsetExists('amount')) {
+        if (!$details->offsetExists('amount')) {
             throw new \Exception('Validation error');
         }
 
         $requestParams = new ArrayObject();
 
-        $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
-        if (isset($paymentMethodNonceInfo['type']) && $paymentMethodNonceInfo['type'] === 'UsBankAccount') {
-            if (! $details->offsetExists('customerId') || !$details->offsetGet('customerId')) {
-                /** @var Customer $customerResult */
-                $customerResult = $this->api->createCustomer($details['customer']);
-                if (! $customerResult instanceof Customer) {
-                    throw new \Exception('Could not create customer');
+        if ($details->offsetExists('paymentMethodNonceInfo')) {
+            $paymentMethodNonceInfo = $details->offsetGet('paymentMethodNonceInfo');
+            if (isset($paymentMethodNonceInfo['type']) && $paymentMethodNonceInfo['type'] === 'UsBankAccount') {
+                if (!$details->offsetExists('customerId') || !$details->offsetGet('customerId')) {
+                    /** @var Customer $customerResult */
+                    $customerResult = $this->api->createCustomer($details['customer']);
+                    if (!$customerResult instanceof Customer) {
+                        throw new \RuntimeException('Could not create customer');
+                    }
+                    $details->offsetSet('customerId', $customerResult->id);
+                    /** @var Successful $paymentMethodResult */
+                    $paymentMethodResult = $this->api->createPaymentMethod(
+                        [
+                            'customerId'         => $customerResult->id,
+                            'paymentMethodNonce' => $details['paymentMethodNonce'],
+                            'options'            => [
+                                'usBankAccountVerificationMethod' => UsBankAccountVerification::NETWORK_CHECK,
+                            ],
+                        ]
+                    );
+                    if (!$paymentMethodResult instanceof Successful) {
+                        throw new \RuntimeException('Could not create payment method');
+                    }
                 }
-                $details->offsetSet('customerId', $customerResult->id);
-                /** @var Successful $paymentMethodResult */
-                $paymentMethodResult = $this->api->createPaymentMethod([
-                    'customerId' => $customerResult->id,
-                    'paymentMethodNonce' => $details['paymentMethodNonce'],
-                    'options' => [
-                        'usBankAccountVerificationMethod' => \Braintree\Result\UsBankAccountVerification::NETWORK_CHECK
-                    ]
-                ]);
-                if (! $paymentMethodResult instanceof Successful) {
-                    throw new \Exception('Could not create payment method');
-                }
+                $details->offsetUnset('paymentMethodNonce');
             }
-            $details->offsetUnset('paymentMethodNonce');
         }
 
         $forwardParams = [
@@ -92,9 +93,6 @@ class DoSaleAction extends BaseApiAwareAction
         return $requestParams;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports($request)
     {
         return $request instanceof DoSale && $request->getModel() instanceof \ArrayAccess;

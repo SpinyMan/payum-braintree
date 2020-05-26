@@ -15,23 +15,17 @@ class CaptureAction implements ActionInterface, GatewayAwareInterface
 {
     use GatewayAwareTrait;
 
-    /**
-     * {@inheritdoc}
-     */
     public function execute($request)
     {
         RequestNotSupportedException::assertSupports($this, $request);
 
-        $this->gateway->execute(new Purchase($request->getModel()));
+        $this->gateway->execute(
+            new Purchase($request->getModel())
+        );
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function supports($request)
     {
-        return $request instanceof Capture
-            && ($request->getModel() instanceof Identity
-                || $request->getModel() instanceof ArrayObject);
+        return $request instanceof Capture && ($request->getModel() instanceof Identity || $request->getModel() instanceof ArrayObject);
     }
 }

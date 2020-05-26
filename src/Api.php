@@ -1,9 +1,11 @@
 <?php
+
 namespace Payum\Braintree;
 
 use Braintree\Customer;
 use Braintree\PaymentMethod;
-use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Exception\InvalidArgumentException;
+use Payum\Core\Model\ArrayObject;
 use Braintree\Configuration;
 use Braintree\ClientToken;
 use Braintree\PaymentMethodNonce;
@@ -17,9 +19,9 @@ class Api
     protected $options = [];
 
     /**
-     * @param array               $options
+     * @param array $options
      *
-     * @throws \Payum\Core\Exception\InvalidArgumentException if an option is invalid
+     * @throws InvalidArgumentException if an option is invalid
      */
     public function __construct(array $options)
     {
@@ -28,7 +30,7 @@ class Api
         $this->initialise();
     }
 
-    private function initialise()
+    private function initialise(): void
     {
         Configuration::reset();
 
@@ -36,9 +38,10 @@ class Api
 
         if (array_key_exists('environment', $this->options) && null !== $this->options['environment']) {
             $environment = $this->options['environment'];
-        }
-        else if (array_key_exists('sandbox', $this->options) && null !== $this->options['sandbox']) {
-            $environment = !$this->options['sandbox'] ? 'production' : 'sandbox';
+        } else {
+            if (array_key_exists('sandbox', $this->options) && null !== $this->options['sandbox']) {
+                $environment = !$this->options['sandbox'] ? 'production' : 'sandbox';
+            }
         }
 
         Configuration::environment($environment);
@@ -64,7 +67,7 @@ class Api
 
     public function sale(ArrayObject $params)
     {
-        $options = $params->offsetExists('options') ? $params['options'] : array();
+        $options = $params->offsetExists('options') ? $params['options'] : [];
 
         if (null !== $this->options['storeInVault'] && !isset($options['storeInVault'])) {
             $options['storeInVault'] = $this->options['storeInVault'];
@@ -74,17 +77,15 @@ class Api
             $options['storeInVaultOnSuccess'] = $this->options['storeInVaultOnSuccess'];
         }
 
-        if (null !== $this->options['addBillingAddressToPaymentMethod'] &&
-            !isset($options['addBillingAddressToPaymentMethod']) &&
-            $params->offsetExists('billing')) {
-
+        if (null !== $this->options['addBillingAddressToPaymentMethod']
+            && !isset($options['addBillingAddressToPaymentMethod'])
+            && $params->offsetExists('billing')) {
             $options['addBillingAddressToPaymentMethod'] = $this->options['addBillingAddressToPaymentMethod'];
         }
 
-        if (null !== $this->options['storeShippingAddressInVault'] &&
-            !isset($options['storeShippingAddressInVault']) &&
-            $params->offsetExists('shipping')) {
-
+        if (null !== $this->options['storeShippingAddressInVault']
+            && !isset($options['storeShippingAddressInVault'])
+            && $params->offsetExists('shipping')) {
             $options['storeShippingAddressInVault'] = $this->options['storeShippingAddressInVault'];
         }
 
@@ -94,7 +95,7 @@ class Api
             $params['merchantAccountId'] = $this->options['merchantAccountId'];
         }
 
-        return Transaction::sale((array)$params);
+        return Transaction::sale((array) $params);
     }
 
     public function refund(ArrayObject $params)
@@ -102,9 +103,9 @@ class Api
         return Transaction::refund($params->offsetGet('transactionId'), $params->offsetGet('amount'));
     }
 
-    public function search(array $params)
+    public function find($transactionId)
     {
-        return Transaction::search($params);
+        return Transaction::find($transactionId);
     }
 
     public function createCustomer(array $params)
@@ -112,13 +113,18 @@ class Api
         return Customer::createNoValidate($params);
     }
 
-    public function updateCustomer(string $customerId, array $params)
-    {
-        return Customer::updateNoValidate($customerId, $params);
-    }
-
     public function createPaymentMethod(array $params)
     {
         return PaymentMethod::create($params);
+    }
+
+    public function submitForSettlement($transactionId, $amount = null, $attribs = [])
+    {
+        return Transaction::submitForSettlement($transactionId, $amount, $attribs);
+    }
+
+    public function void($transactionId)
+    {
+        return Transaction::voidNoValidate($transactionId);
     }
 }

@@ -1,7 +1,7 @@
 <?php
+
 namespace Payum\Braintree\Request\Api;
 
-use Payum\Core\Request\Generic;
 use Braintree\PaymentMethodNonce;
 
 class FindPaymentMethodNonce
@@ -10,33 +10,21 @@ class FindPaymentMethodNonce
 
     private $response;
 
-    /**
-     * @param string $nonceString
-     */
-    public function __construct($nonceString)
+    public function __construct(string $nonceString)
     {
         $this->nonceString = $nonceString;
     }
 
-    /** 
-     * @return string
-     */
-    public function getNonceString()
+    public function getNonceString(): ?string
     {
         return $this->nonceString;
     }
 
-    /**
-     * @return PaymentMethodNonce
-     */
-    public function getResponse()
+    public function getResponse(): ?PaymentMethodNonce
     {
         return $this->response;
     }
 
-    /**
-     * @param PaymentMethodNonce $response
-     */
     public function setResponse(PaymentMethodNonce $response)
     {
         $this->response = $response;

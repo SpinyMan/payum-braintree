@@ -1,16 +1,19 @@
 <?php
+
 namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\GatewayAwareInterface;
-use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Exception\RequestNotSupportedException;
 use Payum\Core\GatewayAwareTrait;
+use Payum\Core\Model\ArrayObject;
+use Payum\Core\Payum;
 use Payum\Core\Request\RenderTemplate;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Reply\HttpResponse;
 use Payum\Braintree\Request\ObtainCardholderAuthentication;
-use Payum\Braintree\Request\FindPaymentMethodNonce;
+
+//use Payum\Braintree\Request\FindPaymentMethodNonce;
 use Payum\Braintree\Request\Api\GenerateClientToken;
 
 class ObtainCardholderAuthenticationAction implements ActionInterface, GatewayAwareInterface
@@ -24,21 +27,17 @@ class ObtainCardholderAuthenticationAction implements ActionInterface, GatewayAw
         $this->templateName = $templateName;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @param ObtainCardholderAuthentication $request
-     */
     public function execute($request)
     {
         RequestNotSupportedException::assertSupports($this, $request);
 
-        /** @var \Payum\Core\Model\ArrayObject $details */
-        $details = /*ArrayObject::ensureArrayObject*/($request->getModel());
+        /** @var ArrayObject $details */
+        $details = /*ArrayObject::ensureArrayObject*/
+            ($request->getModel());
 
-        if ( ! $details->offsetExists('paymentMethodNonce')
-            || ! $details->offsetExists('paymentMethodNonceInfo')) {
-            throw new \Exception('Validation error');
+        if (!$details->offsetExists('paymentMethodNonce')
+            || !$details->offsetExists('paymentMethodNonceInfo')) {
+            throw new \RuntimeException('Validation error');
         }
 
         $paymentMethodNonceInfo = $details['paymentMethodNonceInfo'];
@@ -49,32 +48,32 @@ class ObtainCardholderAuthenticationAction implements ActionInterface, GatewayAw
 
         $this->gateway->execute($clientHttpRequest = new GetHttpRequest());
 
-        if ('POST' == $clientHttpRequest->method && array_key_exists('threeDSecure_payment_method_nonce', $clientHttpRequest->request)) {
+        if ($clientHttpRequest->method === 'POST' && array_key_exists('threeDSecure_payment_method_nonce', $clientHttpRequest->request)) {
             $paymentMethodNonce = $clientHttpRequest->request['threeDSecure_payment_method_nonce'];
             $request->setResponse($paymentMethodNonce);
+
             return;
         }
 
-        if (false == $details->offsetExists('clientToken')) {
+        if (!$details->offsetExists('clientToken')) {
             $this->generateClientToken($details);
         }
 
-        if ( ! $details->offsetExists('clientToken')) {
-            throw new \Exception('Validation error');
+        if (!$details->offsetExists('clientToken')) {
+            throw new \RuntimeException('Validation error');
         }
 
-        //update storage
-        /** @var \Payum\Core\Payum $payum */
-        $payum = app('payum');
-        $payum->getStorage($details)->update($details);
-
-        $this->gateway->execute($template = new RenderTemplate($this->templateName, [
-            'formAction' => $clientHttpRequest->uri,
-            'clientToken' => $details['clientToken'],
-            'amount' => $details['amount'],
-            'creditCard' => $details['paymentMethodNonce'],
-            'details' => $details
-        ]));
+        $this->gateway->execute(
+            $template = new RenderTemplate(
+                $this->templateName, [
+                'formAction'  => $clientHttpRequest->uri,
+                'clientToken' => $details['clientToken'],
+                'amount'      => $details['amount'],
+                'creditCard'  => $details['paymentMethodNonce'],
+                'details'     => $details,
+            ]
+            )
+        );
 
         throw new HttpResponse($template->getResult());
     }
@@ -88,14 +87,8 @@ class ObtainCardholderAuthenticationAction implements ActionInterface, GatewayAw
         $details['clientToken'] = $request->getResponse();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports($request)
     {
-        return
-            $request instanceof ObtainCardholderAuthentication &&
-            $request->getModel() instanceof \ArrayAccess
-        ;
+        return $request instanceof ObtainCardholderAuthentication && $request->getModel() instanceof \ArrayAccess;
     }
 }

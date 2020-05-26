@@ -1,9 +1,11 @@
 <?php
+
 namespace Payum\Braintree\Tests\Util;
 
 use Payum\Braintree\Util\ArrayUtils;
+use PHPUnit\Framework\TestCase;
 
-class ArrayUtilsTest extends \PHPUnit_Framework_TestCase
+class ArrayUtilsTest extends TestCase
 {
     /**
      * @test

@@ -127,9 +127,9 @@
             </div>
         </div>
         <form method="POST" action="{{ formAction }}" id="braintree-payment-form" style="display: none">
-            <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value="" />
-            <input type="hidden" name="amount" id="braintree_payment_amount" value="{{ amount|json_encode|raw }}" />
-            <input type="submit" id="braintree-payment-submit" />
+            <input type="hidden" name="payment_method_nonce" id="payment_method_nonce" value=""/>
+            <input type="hidden" name="amount" id="braintree_payment_amount" value="{{ amount|json_encode|raw }}"/>
+            <input type="submit" id="braintree-payment-submit"/>
         </form>
     {% endblock %}
 
@@ -167,12 +167,12 @@
                     setupBTForm();
                     return;
                 }
-                var btId = 'bt-'+btScriptSrc[i];
+                var btId = 'bt-' + btScriptSrc[i];
                 if (document.getElementById(btId) === null) {
                     var s = document.createElement('script');
                     s.id = btId;
                     s.async = true;
-                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.60.0/js/') + btScriptSrc[i] + '.min.js';
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.62.1/js/') + btScriptSrc[i] + '.min.js';
                     s.onload = function () {
                         loadBTScript(i + 1);
                     };
@@ -207,7 +207,7 @@
             function setupBTForm() {
                 braintree.client.create({
                     authorization: {{ clientToken|json_encode|raw }},
-                }, function(err, clientInstance) {
+                }, function (err, clientInstance) {
                     if (err) {
                         //console.error(err);
                         fireBraintreeError(err);
@@ -443,7 +443,7 @@
                             //e.fields.name = {isValid: validateInput(ccName)};
                             var fields = Object.keys(e.fields);
                             for (var field of fields) {
-                                if (! e.fields[field].isValid) {
+                                if (!e.fields[field].isValid) {
                                     cardBrandButton.disabled = true;
                                     return;
                                 }
@@ -458,7 +458,7 @@
                             if (e.cards.length === 1) {
                                 var card = e.cards[0];
 
-                                cardBrand.textContent =card.niceType;
+                                cardBrand.textContent = card.niceType;
                                 // update the security code label
                                 cvvLabel.textContent = card.code.name;
                             } else {
@@ -499,7 +499,7 @@
 
                             hostedFieldsInstance.tokenize({
                                 cardholderName: document.querySelector('#cc-name').value
-                            }, function(tokenizeErr, payload) {
+                            }, function (tokenizeErr, payload) {
                                 if (tokenizeErr) {
                                     fireBraintreeError(tokenizeErr);
                                     return;
@@ -522,7 +522,8 @@
                                             // console.log('result: ', result);
                                             callback();
                                         },
-                                        onUserClose: function () {}
+                                        onUserClose: function () {
+                                        }
                                     }, function (verifyErr, verifyResponse) {
                                         if (verifyErr) {
                                             // Handle errors
