@@ -172,7 +172,7 @@
                     var s = document.createElement('script');
                     s.id = btId;
                     s.async = true;
-                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.62.1/js/') + btScriptSrc[i] + '.min.js';
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.62.2/js/') + btScriptSrc[i] + '.min.js';
                     s.onload = function () {
                         loadBTScript(i + 1);
                     };
@@ -194,7 +194,7 @@
                 };
                 document.dispatchEvent(billingEvent);
 
-                if (['United States of America', 'USA'].indexOf(billingEvent.address.countryName) === -1) {
+                if (['United States of America', 'United States', 'USA'].indexOf(billingEvent.address.countryName) === -1) {
                     ACHEnabled = false;
                     braintreeAchDirect.innerHTML = 'Not available for your country';
                 }
