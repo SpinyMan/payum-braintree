@@ -2,7 +2,7 @@
 
 namespace Payum\Braintree\Tests\Action;
 
-use Payum\Core\Model\ArrayObject;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Request\Generic;
 use Payum\Core\Request\GetHttpRequest;
 use Payum\Core\Request\RenderTemplate;

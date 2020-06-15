@@ -65,7 +65,7 @@ class StatusAction implements ActionInterface
         $request->markNew();
     }
 
-    protected function hasSuccessfulTransaction(ArrayObject $details): bool
+    protected function hasSuccessfulTransaction(\ArrayObject $details): bool
     {
         return $details->offsetExists('sale') && $details['sale']['success'];
     }

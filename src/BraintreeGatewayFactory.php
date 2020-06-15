@@ -97,7 +97,7 @@ class BraintreeGatewayFactory extends GatewayFactory
         }
 
         $payumPaths                   = $config['payum.paths'];
-        $payumPaths['PayumBraintree'] = __DIR__ . '/Resources/views';
+        $payumPaths['PayumBraintree'] = __DIR__ . '/../resources/views';
 
         $config->offsetSet('payum.paths', $payumPaths);
     }
