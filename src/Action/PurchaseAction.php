@@ -18,6 +18,7 @@ use Payum\Braintree\Request\Api\DoSale;
 use Payum\Braintree\Reply\Api\PaymentMethodNonceArray;
 use Payum\Braintree\Reply\Api\TransactionResultArray;
 use Braintree\Transaction;
+use Payum\Core\Request\GetHumanStatus;
 
 class PurchaseAction implements ActionInterface, GatewayAwareInterface
 {
@@ -61,7 +62,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 throw new \RuntimeException('Validation error');
             }
         } catch (RuntimeException $exception) {
-            $details->offsetSet('status', 'failed');
+            $details->offsetSet('status', GetHumanStatus::STATUS_FAILED);
             $details->offsetSet('status_reason', $exception->getMessage());
         }
 
@@ -158,7 +159,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
         $details['customer'] = $customer->jsonSerialize();
     }*/
 
-    protected function resolveStatus(ArrayObject $details)
+    protected function resolveStatus(ArrayObject $details): void
     {
         $sale = $details->offsetGet('sale');
 
@@ -166,7 +167,7 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
             switch ($sale['transaction']['status']) {
                 case Transaction::AUTHORIZED:
                 case Transaction::AUTHORIZING:
-                    $details->offsetSet('status', 'authorized');
+                    $details->offsetSet('status', GetHumanStatus::STATUS_AUTHORIZED);
                     break;
 
                 case Transaction::SUBMITTED_FOR_SETTLEMENT:
@@ -174,11 +175,26 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 case Transaction::SETTLED:
                 case Transaction::SETTLEMENT_PENDING:
                 case Transaction::SETTLEMENT_CONFIRMED:
-                    $details->offsetSet('status', 'captured');
+                    $details->offsetSet('status', GetHumanStatus::STATUS_CAPTURED);
+                    break;
+
+                case Transaction::FAILED:
+                case Transaction::GATEWAY_REJECTED:
+                case Transaction::PROCESSOR_DECLINED:
+                case Transaction::SETTLEMENT_DECLINED:
+                    $details->offsetSet('status', GetHumanStatus::STATUS_FAILED);
+                    break;
+
+                case Transaction::VOIDED:
+                    $details->offsetSet('status', GetHumanStatus::STATUS_CANCELED);
+                    break;
+
+                case Transaction::AUTHORIZATION_EXPIRED:
+                    $details->offsetSet('status', GetHumanStatus::STATUS_EXPIRED);
                     break;
             }
         } else {
-            $details->offsetSet('status', 'failed');
+            $details->offsetSet('status', GetHumanStatus::STATUS_FAILED);
         }
     }
 

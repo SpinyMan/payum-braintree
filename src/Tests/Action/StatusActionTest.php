@@ -1,116 +1,121 @@
 <?php
+
 namespace Payum\Braintree\Tests\Action;
 
+use Braintree\Transaction;
 use Payum\Core\Request\GetHumanStatus;
 use Payum\Braintree\Action\StatusAction;
 
 class StatusActionTest extends GenericActionTest
 {
-    protected $actionClass = StatusAction::class;
+    protected $actionClass  = StatusAction::class;
 
     protected $requestClass = GetHumanStatus::class;
 
-    /**
-     * @test
-     */
-    public function shouldMarkNewIfDetailsEmpty()
+    public function testShouldMarkNewIfDetailsEmpty()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array()));
+        $action->execute($status = new GetHumanStatus([]));
 
         $this->assertTrue($status->isNew());
     }
 
-    /**
-     * @test
-     */
-    public function shouldMarkPendingIfOnlyHasPaymentMethodNonce()
+    public function testShouldMarkPendingIfOnlyHasPaymentMethodNonce()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'paymentMethodNonce' => '1234'
-        )));
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'paymentMethodNonce' => '1234',
+                ]
+            )
+        );
 
         $this->assertTrue($status->isPending());
     }
 
-    /**
-     * @test
-     */
-    public function shouldMarkFailedIfHasFailedStatus()
+    public function testShouldMarkFailedIfHasFailedStatus()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'status' => 'failed'
-        )));
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'status' => GetHumanStatus::STATUS_FAILED,
+                ]
+            )
+        );
 
         $this->assertTrue($status->isFailed());
     }
 
-    /**
-     * @test
-     */
-    public function shouldMarkAuthorized()
+    public function testShouldMarkAuthorized()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'status' => 'authorized',
-            'sale' => array(
-                'success' => true
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'status' => GetHumanStatus::STATUS_AUTHORIZED,
+                    'sale'   => [
+                        'success' => true,
+                    ],
+                ]
             )
-        )));
+        );
 
         $this->assertTrue($status->isAuthorized());
     }
 
-    /**
-     * @test
-     */
-    public function shouldMarkCaptured()
+    public function testShouldMarkCaptured()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'status' => 'captured',
-            'sale' => array(
-                'success' => true
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'status' => GetHumanStatus::STATUS_CAPTURED,
+                    'sale'   => [
+                        'success' => true,
+                    ],
+                ]
             )
-        )));
+        );
 
         $this->assertTrue($status->isCaptured());
     }
-    
-    /**
-     * @test
-     */
-    public function shouldMarkUnknownIfMissingTransactionSuccess()
+
+    public function testShouldMarkUnknownIfMissingTransactionSuccess()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'status' => 'captured'
-        )));
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'status' => GetHumanStatus::STATUS_CAPTURED,
+                ]
+            )
+        );
 
         $this->assertTrue($status->isUnknown());
     }
-    
-    /**
-     * @test
-     */
-    public function shouldMarkUnknownIfTransactionFalseSuccess()
+
+    public function testShouldMarkUnknownIfTransactionFalseSuccess()
     {
         $action = new StatusAction();
 
-        $action->execute($status = new GetHumanStatus(array(
-            'status' => 'captured',
-            'sale' => array(
-                'success' => false    
+        $action->execute(
+            $status = new GetHumanStatus(
+                [
+                    'status' => GetHumanStatus::STATUS_CAPTURED,
+                    'sale'   => [
+                        'success' => false,
+                    ],
+                ]
             )
-        )));
+        );
 
         $this->assertTrue($status->isUnknown());
     }

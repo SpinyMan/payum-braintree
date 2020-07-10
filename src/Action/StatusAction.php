@@ -4,15 +4,17 @@ namespace Payum\Braintree\Action;
 
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Model\ArrayObject;
+use Payum\Core\Request\GetHumanStatus;
 use Payum\Core\Request\GetStatusInterface;
 use Payum\Core\Exception\RequestNotSupportedException;
 
 class StatusAction implements ActionInterface
 {
+    /**
+     * @param GetStatusInterface $request
+     */
     public function execute($request)
     {
-        /** @param GetStatusInterface $request */
-
         RequestNotSupportedException::assertSupports($this, $request);
 
         /** @var ArrayObject $details */
@@ -22,12 +24,12 @@ class StatusAction implements ActionInterface
         if ($details->offsetExists('status')) {
             $status = $details->offsetGet('status');
             switch ($status) {
-                case 'failed':
+                case GetHumanStatus::STATUS_FAILED:
                     $request->markFailed();
 
                     return;
 
-                case 'authorized':
+                case GetHumanStatus::STATUS_AUTHORIZED:
                     if ($this->hasSuccessfulTransaction($details)) {
                         $request->markAuthorized();
                     } else {
