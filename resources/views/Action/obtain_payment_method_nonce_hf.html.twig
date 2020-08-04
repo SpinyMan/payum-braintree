@@ -7,14 +7,14 @@
             <div data-braintree-id="choose-a-way-to-pay" class="braintree-heading">Choose a way to pay</div>
             <div class="panel-group" id="braintree-accordion" role="tablist" aria-multiselectable="true">
                 <div class="panel panel-default">
-                    <div id="pbt-creadit-card-container" class="panel-heading" role="tab">
-                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-creadit-card" aria-expanded="true" aria-controls="creadit-card">
+                    <div id="pbt-credit-card-container" class="panel-heading" role="tab">
+                        <label class="panel-title collapsed" data-toggle="collapse" data-target="#pbt-credit-card" aria-expanded="true" aria-controls="credit-card">
                             <input type="radio" name="braintree-payment-type" value="creditCard" style="display: none">
                             <i class="fa fa-credit-card"></i>
                             Card
                         </label>
                     </div>
-                    <div id="pbt-creadit-card" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-creadit-card-container">
+                    <div id="pbt-credit-card" class="panel-collapse collapse" role="tabpanel" data-parent="#braintree-accordion" aria-labelledby="pbt-credit-card-container">
                         <div class="panel-body">
                             <div class="bootstrap-basic">
                                 <form id="braintree-hosted-fields-form" class="needs-validation" novalidate="">
@@ -142,7 +142,7 @@
                 braintreeHostedFieldsForm = document.querySelector('#braintree-hosted-fields-form'),
                 htmlHead = document.getElementsByTagName('head')[0],
                 braintreePaymentAmount = document.querySelector('#braintree_payment_amount');
-            var threeDSecure,
+            let threeDSecure,
                 ACHEnabled = true;
 
             const btScriptSrc = [
@@ -167,12 +167,12 @@
                     setupBTForm();
                     return;
                 }
-                var btId = 'bt-' + btScriptSrc[i];
+                const btId = 'bt-' + btScriptSrc[i];
                 if (document.getElementById(btId) === null) {
-                    var s = document.createElement('script');
+                    const s = document.createElement('script');
                     s.id = btId;
                     s.async = true;
-                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.62.2/js/') + btScriptSrc[i] + '.min.js';
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.64.1/js/') + btScriptSrc[i] + '.min.js';
                     s.onload = function () {
                         loadBTScript(i + 1);
                     };
@@ -214,7 +214,7 @@
                         return;
                     }
 
-                    var ccName = document.getElementById('cc-name');
+                    const ccName = document.getElementById('cc-name');
 
                     // Create a PayPal Checkout component.
                     braintree.paypalCheckout.create({
@@ -247,7 +247,7 @@
                                 });
                             },
 
-                            onAuthorize: function (data, actions) {
+                            onAuthorize: function (data) {
                                 return paypalCheckoutInstance.tokenizePayment(data, function (onAuthorizeErr, onAuthorizePayload) {
                                     if (onAuthorizeErr) {
                                         // console.log('onAuthorizeErr:', onAuthorizeErr);
@@ -298,7 +298,7 @@
                             document.getElementById('bank-login-button').addEventListener('click', function (e) {
                                 e.preventDefault();
 
-                                var bankDetails = {
+                                const bankDetails = {
                                     routingNumber: document.querySelector('#ach-routingNumber').value,
                                     accountNumber: document.querySelector('#ach-accountNumber').value,
                                     accountType: document.querySelector('#ach-accountType').value,
@@ -425,7 +425,7 @@
                         });
 
                         hostedFieldsInstance.on('validityChange', function (e) {
-                            var field = e.fields[e.emittedBy];
+                            let field = e.fields[e.emittedBy];
 
                             // Remove any previously applied error or warning classes
                             field.container.classList.remove('is-valid');
@@ -441,8 +441,8 @@
                             }
 
                             //e.fields.name = {isValid: validateInput(ccName)};
-                            var fields = Object.keys(e.fields);
-                            for (var field of fields) {
+                            const fields = Object.keys(e.fields);
+                            for (field of fields) {
                                 if (!e.fields[field].isValid) {
                                     cardBrandButton.disabled = true;
                                     return;
@@ -452,11 +452,11 @@
                         });
 
                         hostedFieldsInstance.on('cardTypeChange', function (e) {
-                            var cardBrand = document.querySelector('#card-brand'),
+                            const cardBrand = document.querySelector('#card-brand'),
                                 cvvLabel = document.querySelector('#for-cc-cvv');
 
                             if (e.cards.length === 1) {
-                                var card = e.cards[0];
+                                const card = e.cards[0];
 
                                 cardBrand.textContent = card.niceType;
                                 // update the security code label
@@ -471,7 +471,7 @@
                         braintreeHostedFieldsForm.addEventListener('submit', function (e) {
                             e.preventDefault();
 
-                            var formIsInvalid = false,
+                            let formIsInvalid = false,
                                 state = hostedFieldsInstance.getState();
 
                             // perform validations on the non-Hosted Fields
@@ -511,8 +511,8 @@
 
                                 // you can either send the form values with the payment
                                 // method nonce via an ajax request to your server,
-                                // or add the payment method nonce to a hidden inpiut
-                                // on your form and submit the form programatically
+                                // or add the payment method nonce to a hidden input
+                                // on your form and submit the form programmatically
 
                                 if (payload.type === 'CreditCard') {
                                     threeDSecure.verifyCard({
@@ -556,7 +556,7 @@
 
             function fireBraintreeError(err) {
                 // console.log(err);
-                var resultEvent = new Event('braintree.error');
+                const resultEvent = new Event('braintree.error');
                 resultEvent.exception = err;
                 document.dispatchEvent(resultEvent);
             }
