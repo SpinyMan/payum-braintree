@@ -192,6 +192,10 @@ class PurchaseAction implements ActionInterface, GatewayAwareInterface
                 case Transaction::AUTHORIZATION_EXPIRED:
                     $details->offsetSet('status', GetHumanStatus::STATUS_EXPIRED);
                     break;
+
+                case Transaction::UNRECOGNIZED:
+                    $details->offsetSet('status', GetHumanStatus::STATUS_UNKNOWN);
+                    break;
             }
         } else {
             $details->offsetSet('status', GetHumanStatus::STATUS_FAILED);

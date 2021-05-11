@@ -1,5 +1,5 @@
 {
-    "name": "SpinyMan/payum-braintree",
+    "name": "spinyman/payum-braintree",
     "type": "library",
     "description": "A Payum extension for Braintree gateway integration",
     "keywords": ["payment", "braintree", "payum"],
