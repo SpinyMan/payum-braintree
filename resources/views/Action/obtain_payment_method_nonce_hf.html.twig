@@ -172,7 +172,7 @@
                     const s = document.createElement('script');
                     s.id = btId;
                     s.async = true;
-                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.68.0/js/') + btScriptSrc[i] + '.min.js';
+                    s.src = (/^http(s)?:/.test(btScriptSrc[i]) ? '' : 'https://js.braintreegateway.com/web/3.85.1/js/') + btScriptSrc[i] + '.min.js';
                     s.onload = function () {
                         loadBTScript(i + 1);
                     };
