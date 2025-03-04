@@ -11,9 +11,9 @@
         }
     ],
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.3",
         "payum/core": "^1.7.0",
-        "braintree/braintree_php": "^5.1.0"
+        "braintree/braintree_php": "^6.21.0"
     },
     "require-dev": {
         "php-http/guzzle6-adapter": "^2.0.1",
@@ -23,8 +23,8 @@
         "bin-dir": "bin"
     },
     "autoload": {
-        "psr-4": { 
-            "Payum\\Braintree\\": "src" 
+        "psr-4": {
+            "Payum\\Braintree\\": "src"
         }
     },
     "extra": {
